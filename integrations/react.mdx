@@ -1,0 +1,208 @@
+---
+title: 'React, Solid & UnoCSS'
+description: 'ESLint integrations for React, Next.js, Solid.js, UnoCSS, and JSX accessibility.'
+keywords: ['react', 'nextjs', 'next.js', 'solid', 'unocss', 'jsx', 'eslint', 'a11y', 'react-refresh']
+---
+
+React and Next.js support must be explicitly enabled — they are not auto-detected.
+
+## React
+
+<Steps>
+  <Step title="Enable React in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      react: true,
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D @eslint-react/eslint-plugin eslint-plugin-react-refresh
+      ```
+      ```bash pnpm
+      pnpm i -D @eslint-react/eslint-plugin eslint-plugin-react-refresh
+      ```
+      ```bash yarn
+      yarn add -D @eslint-react/eslint-plugin eslint-plugin-react-refresh
+      ```
+    </CodeGroup>
+
+    Running `npx eslint` will also prompt you to install these automatically.
+  </Step>
+</Steps>
+
+The React integration enables rules from `@eslint-react/eslint-plugin` under the renamed prefixes `react/`, `react-dom/`, `react-naming-convention/`, `react-rsc/`, and `react-web-api/`. It also includes `eslint-plugin-react-refresh` under the `react-refresh/` prefix for fast-refresh compatibility checks.
+
+## Next.js
+
+<Steps>
+  <Step title="Enable Next.js in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      nextjs: true,
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D @next/eslint-plugin-next
+      ```
+      ```bash pnpm
+      pnpm i -D @next/eslint-plugin-next
+      ```
+      ```bash yarn
+      yarn add -D @next/eslint-plugin-next
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+<Note>
+  Next.js can be enabled independently of the `react` option, but in practice you will want both enabled together. The `next/` plugin prefix maps to `@next/eslint-plugin-next`.
+</Note>
+
+## JSX accessibility
+
+JSX accessibility rules are provided via `eslint-plugin-jsx-a11y`. Enable them through the `jsx` option:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  jsx: {
+    a11y: true,
+  },
+})
+```
+
+Install the required dependency:
+
+<CodeGroup>
+  ```bash npm
+  npm i -D eslint-plugin-jsx-a11y
+  ```
+  ```bash pnpm
+  pnpm i -D eslint-plugin-jsx-a11y
+  ```
+  ```bash yarn
+  yarn add -D eslint-plugin-jsx-a11y
+  ```
+</CodeGroup>
+
+## Rule overrides
+
+Use the `overrides` key inside the `react` or `nextjs` option to customize specific rules:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  react: {
+    overrides: {
+      'react/prefer-namespace-import': 'warn',
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  nextjs: {
+    overrides: {
+      'next/no-html-link-for-pages': 'warn',
+    },
+  },
+})
+```
+
+<Note>
+  Plugin prefixes are renamed from their npm package names. Use `react/` instead of `@eslint-react/`, and `next/` instead of `@next/next`. See the [plugin renaming reference](/reference/plugin-renaming) for the full mapping.
+</Note>
+
+---
+
+## Solid
+
+[Solid.js](https://www.solidjs.com/) support must be explicitly enabled.
+
+<Steps>
+  <Step title="Enable Solid in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      solid: true,
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D eslint-plugin-solid
+      ```
+      ```bash pnpm
+      pnpm i -D eslint-plugin-solid
+      ```
+      ```bash yarn
+      yarn add -D eslint-plugin-solid
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+The Solid integration enables rules from `eslint-plugin-solid` under the `solid/` prefix, applied to `.jsx` and `.tsx` files.
+
+---
+
+## UnoCSS
+
+[UnoCSS](https://unocss.dev/) linting support must be explicitly enabled.
+
+<Steps>
+  <Step title="Enable UnoCSS in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      unocss: true,
+    })
+    ```
+
+    For advanced configuration:
+
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      unocss: {
+        // Enable attributify ordering rules (default: true)
+        attributify: true,
+        // Enable strict mode — error on blocklisted classes (default: false)
+        strict: false,
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D @unocss/eslint-plugin
+      ```
+      ```bash pnpm
+      pnpm i -D @unocss/eslint-plugin
+      ```
+      ```bash yarn
+      yarn add -D @unocss/eslint-plugin
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+The UnoCSS integration enables rules under the `unocss/` prefix:
+
+- `unocss/order` — warn on incorrect class order
+- `unocss/order-attributify` — warn on incorrect attributify class order (when `attributify: true`)
+- `unocss/blocklist` — error on blocklisted classes (when `strict: true`)

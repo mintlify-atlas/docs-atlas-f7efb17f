@@ -1,0 +1,103 @@
+---
+title: 'Svelte'
+description: 'ESLint integration for Svelte components with TypeScript and stylistic formatting support.'
+keywords: ['svelte', 'svelte-kit', 'eslint', 'sfc', 'typescript']
+---
+
+Svelte support must be explicitly enabled — it is not auto-detected.
+
+## Enabling Svelte
+
+<Steps>
+  <Step title="Enable Svelte in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      svelte: true,
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D eslint-plugin-svelte
+      ```
+      ```bash pnpm
+      pnpm i -D eslint-plugin-svelte
+      ```
+      ```bash yarn
+      yarn add -D eslint-plugin-svelte
+      ```
+    </CodeGroup>
+
+    Running `npx eslint` will also prompt you to install these automatically.
+  </Step>
+</Steps>
+
+The integration uses `eslint-plugin-svelte` for rules and `svelte-eslint-parser` as the parser for `.svelte` files.
+
+## TypeScript in Svelte files
+
+When TypeScript is enabled in your project, the Svelte integration automatically uses `@typescript-eslint/parser` to parse the script blocks inside `.svelte` files. No additional configuration is needed:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  typescript: true,
+  svelte: true,
+})
+```
+
+## Stylistic formatting
+
+Stylistic rules for Svelte are enabled by default when the global `stylistic` option is active. The Svelte integration overrides the general `style/indent` and `style/no-trailing-spaces` rules in favour of the Svelte-specific equivalents (`svelte/indent`, `svelte/no-trailing-spaces`).
+
+To disable stylistic rules for Svelte only:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  svelte: true,
+  stylistic: false,
+})
+```
+
+## Rule overrides
+
+Use the `overrides` key inside the `svelte` option to customize specific rules:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  svelte: {
+    overrides: {
+      'svelte/no-at-html-tags': 'warn',
+      'svelte/no-reactive-literals': 'off',
+    },
+  },
+})
+```
+
+You can also pass overrides as a separate flat config with explicit `files`:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  { svelte: true },
+  {
+    files: ['**/*.svelte'],
+    rules: {
+      'svelte/indent': ['error', { indent: 4 }],
+    },
+  },
+)
+```
+
+<Note>
+  Svelte rules use the `svelte/` prefix. The `unused-imports/no-unused-vars` rule is configured to ignore Svelte-specific typed variables such as `$$Props`, `$$Events`, and `$$Slots`.
+</Note>

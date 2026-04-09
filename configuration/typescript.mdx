@@ -1,0 +1,203 @@
+---
+title: 'TypeScript'
+description: 'Configure TypeScript support, type-aware rules, and parser options.'
+---
+
+TypeScript support is **auto-detected** by checking whether the `typescript` or `@typescript/native-preview` package is installed in your project. If found, TypeScript rules are enabled automatically with no extra configuration needed.
+
+## The `typescript` option
+
+<ParamField path="typescript" type="boolean | OptionsTypescript" default="auto-detect">
+  Enable or configure TypeScript support. Pass `true` to force-enable it, `false` to disable it, or an object for fine-grained control.
+
+  ```js
+  // Force-enable TypeScript support
+  export default antfu({
+    typescript: true,
+  })
+  ```
+
+  ```js
+  // Explicitly disable TypeScript support
+  export default antfu({
+    typescript: false,
+  })
+  ```
+</ParamField>
+
+## Configuration object
+
+### Type-aware rules
+
+<ParamField path="typescript.tsconfigPath" type="string">
+  Path to your `tsconfig.json` file. Providing this enables [type-aware rules](https://typescript-eslint.io/linting/typed-linting/), which require type information to lint. These rules catch a broader class of errors but are slower because they run the TypeScript compiler.
+
+  ```js
+  export default antfu({
+    typescript: {
+      tsconfigPath: 'tsconfig.json',
+    },
+  })
+  ```
+
+  <Warning>
+    Type-aware linting requires a valid `tsconfig.json` and runs the TypeScript language server. It can noticeably slow down linting on large codebases.
+  </Warning>
+</ParamField>
+
+<ParamField path="typescript.filesTypeAware" type="string[]" default='["**/*.{ts,tsx}"]'>
+  Glob patterns for files that should be linted with type-aware rules. Only relevant when `tsconfigPath` is set.
+
+  ```js
+  export default antfu({
+    typescript: {
+      tsconfigPath: 'tsconfig.json',
+      filesTypeAware: ['**/*.ts', '**/*.tsx'],
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="typescript.ignoresTypeAware" type="string[]" default='["**/*.md/**", "**/*.astro/*.ts"]'>
+  Glob patterns for files that should **not** be linted with type-aware rules, even if they match `filesTypeAware`. Markdown code blocks and Astro embedded TypeScript are excluded by default.
+
+  ```js
+  export default antfu({
+    typescript: {
+      tsconfigPath: 'tsconfig.json',
+      ignoresTypeAware: ['**/*.md/**', '**/generated/**'],
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="typescript.overridesTypeAware" type="Record<string, RuleEntry>">
+  Override rules that are only active when type-aware linting is enabled.
+
+  ```js
+  export default antfu({
+    typescript: {
+      tsconfigPath: 'tsconfig.json',
+      overridesTypeAware: {
+        'ts/no-unsafe-assignment': 'warn',
+      },
+    },
+  })
+  ```
+</ParamField>
+
+### Parser options
+
+<ParamField path="typescript.parserOptions" type="Partial<ParserOptions>">
+  Additional options passed directly to `@typescript-eslint/parser`. Use this to configure project service settings, experimental syntax, or other parser-level flags.
+
+  ```js
+  export default antfu({
+    typescript: {
+      parserOptions: {
+        experimentalDecorators: true,
+      },
+    },
+  })
+  ```
+</ParamField>
+
+### Erasable syntax only
+
+<ParamField path="typescript.erasableOnly" type="boolean" default="false">
+  Enable rules from [`eslint-plugin-erasable-syntax-only`](https://github.com/JoshuaKGoldberg/eslint-plugin-erasable-syntax-only) that restrict TypeScript to syntax which can be stripped by a plain erase transform (no downleveling). This aligns with TypeScript's `--erasableSyntaxOnly` mode.
+
+  The following rules are enabled when `erasableOnly: true`:
+
+  - `erasable-syntax-only/enums`
+  - `erasable-syntax-only/import-aliases`
+  - `erasable-syntax-only/namespaces`
+  - `erasable-syntax-only/parameter-properties`
+
+  ```js
+  export default antfu({
+    typescript: {
+      erasableOnly: true,
+    },
+  })
+  ```
+</ParamField>
+
+### Rule overrides
+
+<ParamField path="typescript.overrides" type="Record<string, RuleEntry>">
+  Override TypeScript rules for all TypeScript files. Use the renamed `ts/*` prefix (not `@typescript-eslint/*`).
+
+  ```js
+  export default antfu({
+    typescript: {
+      overrides: {
+        'ts/consistent-type-definitions': ['error', 'interface'],
+        'ts/no-explicit-any': 'warn',
+      },
+    },
+  })
+  ```
+</ParamField>
+
+## Type-aware rules
+
+When `tsconfigPath` is provided, the following rules are added on top of the base TypeScript rules. They all require type information and use the `ts/*` prefix:
+
+| Rule | Severity |
+| ---- | -------- |
+| `ts/await-thenable` | error |
+| `ts/dot-notation` | error |
+| `ts/no-floating-promises` | error |
+| `ts/no-for-in-array` | error |
+| `ts/no-implied-eval` | error |
+| `ts/no-misused-promises` | error |
+| `ts/no-unnecessary-type-assertion` | error |
+| `ts/no-unsafe-argument` | error |
+| `ts/no-unsafe-assignment` | error |
+| `ts/no-unsafe-call` | error |
+| `ts/no-unsafe-member-access` | error |
+| `ts/no-unsafe-return` | error |
+| `ts/promise-function-async` | error |
+| `ts/restrict-plus-operands` | error |
+| `ts/restrict-template-expressions` | error |
+| `ts/return-await` | error (in-try-catch) |
+| `ts/strict-boolean-expressions` | error |
+| `ts/switch-exhaustiveness-check` | error |
+| `ts/unbound-method` | error |
+
+<Note>
+  Enabling type-aware linting also disables the base `dot-notation` and `no-implied-eval` rules in favor of their TypeScript-aware `ts/` equivalents.
+</Note>
+
+## Library mode
+
+When `type: 'lib'` is set, the rule `ts/explicit-function-return-type` is enabled to require explicit return types on exported functions. This does not require type-aware linting.
+
+```js
+export default antfu({
+  type: 'lib',
+  typescript: true,
+})
+```
+
+## Complete example
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  typescript: {
+    tsconfigPath: 'tsconfig.json',
+    filesTypeAware: ['**/*.{ts,tsx}'],
+    ignoresTypeAware: ['**/*.md/**'],
+    overrides: {
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+    overridesTypeAware: {
+      'ts/no-unsafe-assignment': 'warn',
+    },
+  },
+})
+```

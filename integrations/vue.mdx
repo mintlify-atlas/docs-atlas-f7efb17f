@@ -1,0 +1,136 @@
+---
+title: 'Vue'
+description: 'ESLint integration for Vue single-file components, including Vue 2, accessibility, and SFC block processing.'
+keywords: ['vue', 'nuxt', 'vitepress', 'eslint', 'sfc', 'a11y', 'accessibility']
+---
+
+Vue support is auto-detected when `vue`, `nuxt`, `vitepress`, or `@slidev/cli` is found in your project dependencies. You can also enable it explicitly.
+
+## Enabling Vue
+
+<Steps>
+  <Step title="Enable Vue in your config">
+    Set `vue: true` in your `antfu()` options, or rely on auto-detection:
+
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      vue: true,
+    })
+    ```
+  </Step>
+  <Step title="Run ESLint">
+    ESLint will automatically prompt you to install missing peer dependencies. The core Vue integration requires no additional packages beyond `eslint-plugin-vue`, which ships as a peer dependency.
+  </Step>
+</Steps>
+
+## Vue 2
+
+Vue 2 has reached end-of-life. This config provides limited maintenance support. To use Vue 2 rules, set `vueVersion` to `2`:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  vue: {
+    vueVersion: 2,
+  },
+})
+```
+
+<Warning>
+  Vue 2 support is in maintenance mode. Only bug fixes are accepted, and it may be removed in a future release when `eslint-plugin-vue` drops Vue 2 support. Upgrading to Vue 3 is recommended.
+</Warning>
+
+## Accessibility
+
+To enable Vue accessibility rules, set `a11y: true`. This requires `eslint-plugin-vuejs-accessibility`.
+
+<Steps>
+  <Step title="Enable accessibility in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      vue: {
+        a11y: true,
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the required dependency">
+    <CodeGroup>
+      ```bash npm
+      npm i -D eslint-plugin-vuejs-accessibility
+      ```
+      ```bash pnpm
+      pnpm i -D eslint-plugin-vuejs-accessibility
+      ```
+      ```bash yarn
+      yarn add -D eslint-plugin-vuejs-accessibility
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+When enabled, accessibility rules are applied under the `vue-a11y/` prefix, including rules such as `vue-a11y/alt-text`, `vue-a11y/aria-role`, and `vue-a11y/click-events-have-key-events`.
+
+## SFC blocks
+
+The `sfcBlocks` option controls whether virtual files are created for Vue SFC blocks (such as `<style>`) to enable linting inside them. It is enabled by default.
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  vue: {
+    // Disable SFC block processing
+    sfcBlocks: false,
+
+    // Or pass options to eslint-processor-vue-blocks
+    sfcBlocks: {
+      blocks: {
+        styles: true,
+      },
+    },
+  },
+})
+```
+
+## Rule overrides
+
+Use the `overrides` key inside the `vue` option to override specific rules without needing to specify `files` manually:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  vue: {
+    overrides: {
+      'vue/operator-linebreak': ['error', 'before'],
+      'vue/component-name-in-template-casing': ['error', 'PascalCase'],
+    },
+  },
+})
+```
+
+You can also pass overrides as a separate flat config with explicit `files`:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  { vue: true },
+  {
+    files: ['**/*.vue'],
+    rules: {
+      'vue/operator-linebreak': ['error', 'before'],
+    },
+  },
+)
+```
+
+<Note>
+  Vue rules use the `vue/` prefix. When referencing them in inline disable comments, use `// eslint-disable-next-line vue/rule-name`.
+</Note>

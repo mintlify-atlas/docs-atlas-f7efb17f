@@ -1,0 +1,240 @@
+---
+title: 'IDE setup'
+description: 'Configure auto-fix on save in VS Code, Zed, and Neovim.'
+---
+
+`@antfu/eslint-config` handles formatting via ESLint Stylistic. To get the best experience, configure your editor to auto-fix ESLint issues on save — this replaces the need for a separate Prettier integration.
+
+<Tabs>
+  <Tab title="VS Code">
+    **1. Install the ESLint extension**
+
+    Install the [VS Code ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) (`dbaeumer.vscode-eslint`).
+
+    **2. Configure settings**
+
+    Add the following to your `.vscode/settings.json`:
+
+    ```jsonc .vscode/settings.json
+    {
+      // Disable the default formatter, use eslint instead
+      "prettier.enable": false,
+      "editor.formatOnSave": false,
+
+      // Auto fix
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "never"
+      },
+
+      // Silent the stylistic rules in your IDE, but still auto fix them
+      "eslint.rules.customizations": [
+        { "rule": "style/*", "severity": "off", "fixable": true },
+        { "rule": "format/*", "severity": "off", "fixable": true },
+        { "rule": "*-indent", "severity": "off", "fixable": true },
+        { "rule": "*-spacing", "severity": "off", "fixable": true },
+        { "rule": "*-spaces", "severity": "off", "fixable": true },
+        { "rule": "*-order", "severity": "off", "fixable": true },
+        { "rule": "*-dangle", "severity": "off", "fixable": true },
+        { "rule": "*-newline", "severity": "off", "fixable": true },
+        { "rule": "*quotes", "severity": "off", "fixable": true },
+        { "rule": "*semi", "severity": "off", "fixable": true }
+      ],
+
+      // Enable eslint for all supported languages
+      "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "vue",
+        "html",
+        "markdown",
+        "json",
+        "jsonc",
+        "yaml",
+        "toml",
+        "xml",
+        "gql",
+        "graphql",
+        "astro",
+        "svelte",
+        "css",
+        "less",
+        "scss",
+        "pcss",
+        "postcss"
+      ]
+    }
+    ```
+
+    <Note>
+      The `eslint.rules.customizations` block silences stylistic warnings in the editor UI while still allowing ESLint to auto-fix them on save. This keeps your editor clean without losing the formatting benefit.
+    </Note>
+  </Tab>
+
+  <Tab title="Zed">
+    Add the following to your `.zed/settings.json`:
+
+    ```jsonc .zed/settings.json
+    {
+      "format_on_save": "on",
+      "formatter": [
+        // Use ESLint's --fix:
+        { "code_action": "source.fixAll.eslint" }
+      ],
+      // Enable eslint for all supported languages
+      // Defaults only include https://github.com/search?q=repo%3Azed-industries%2Fzed%20eslint_languages&type=code
+      "languages": {
+        "HTML": {
+          "language_servers": ["...", "eslint"]
+        },
+        "Markdown": {
+          "language_servers": ["...", "eslint"]
+        },
+        "JSON": {
+          "language_servers": ["...", "eslint"]
+        },
+        "JSONC": {
+          "language_servers": ["...", "eslint"]
+        },
+        "YAML": {
+          "language_servers": ["...", "eslint"]
+        },
+        "CSS": {
+          "language_servers": ["...", "eslint"]
+        }
+        // Add other languages as needed
+      },
+      "lsp": {
+        "eslint": {
+          "settings": {
+            // Remove after https://github.com/zed-industries/zed/issues/49387
+            "experimental": {
+              "useFlatConfig": false
+            },
+
+            // Silent the stylistic rules in your IDE, but still auto fix them
+            "rulesCustomizations": [
+              { "rule": "style/*", "severity": "off", "fixable": true },
+              { "rule": "format/*", "severity": "off", "fixable": true },
+              { "rule": "*-indent", "severity": "off", "fixable": true },
+              { "rule": "*-spacing", "severity": "off", "fixable": true },
+              { "rule": "*-spaces", "severity": "off", "fixable": true },
+              { "rule": "*-order", "severity": "off", "fixable": true },
+              { "rule": "*-dangle", "severity": "off", "fixable": true },
+              { "rule": "*-newline", "severity": "off", "fixable": true },
+              { "rule": "*quotes", "severity": "off", "fixable": true },
+              { "rule": "*semi", "severity": "off", "fixable": true }
+            ]
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Neovim">
+    **1. Configure lspconfig**
+
+    Update your Neovim configuration to set up the ESLint language server with the appropriate file types and rule customizations:
+
+    ```lua init.lua / nvim/lua/config.lua
+    local customizations = {
+      { rule = 'style/*', severity = 'off', fixable = true },
+      { rule = 'format/*', severity = 'off', fixable = true },
+      { rule = '*-indent', severity = 'off', fixable = true },
+      { rule = '*-spacing', severity = 'off', fixable = true },
+      { rule = '*-spaces', severity = 'off', fixable = true },
+      { rule = '*-order', severity = 'off', fixable = true },
+      { rule = '*-dangle', severity = 'off', fixable = true },
+      { rule = '*-newline', severity = 'off', fixable = true },
+      { rule = '*quotes', severity = 'off', fixable = true },
+      { rule = '*semi', severity = 'off', fixable = true },
+    }
+
+    local lspconfig = require('lspconfig')
+    -- Enable eslint for all supported languages
+    lspconfig.eslint.setup(
+      {
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "javascript.jsx",
+          "typescript",
+          "typescriptreact",
+          "typescript.tsx",
+          "vue",
+          "html",
+          "markdown",
+          "json",
+          "jsonc",
+          "yaml",
+          "toml",
+          "xml",
+          "gql",
+          "graphql",
+          "astro",
+          "svelte",
+          "css",
+          "less",
+          "scss",
+          "pcss",
+          "postcss"
+        },
+        settings = {
+          -- Silent the stylistic rules in your IDE, but still auto fix them
+          rulesCustomizations = customizations,
+        },
+      }
+    )
+    ```
+
+    **2. Enable format on save**
+
+    Choose one of the following approaches:
+
+    <AccordionGroup>
+      <Accordion title="Using EslintFixAll (built-in)">
+        `nvim-lspconfig` provides an `EslintFixAll` command. You can trigger it automatically on save with an autocommand:
+
+        ```lua
+        lspconfig.eslint.setup({
+          --- ...
+          on_attach = function(client, bufnr)
+            vim.api.nvim_create_autocmd("BufWritePre", {
+              buffer = bufnr,
+              command = "EslintFixAll",
+            })
+          end,
+        })
+        ```
+      </Accordion>
+      <Accordion title="Using conform.nvim">
+        Configure [conform.nvim](https://github.com/stevearc/conform.nvim) to run ESLint as a formatter on save.
+      </Accordion>
+      <Accordion title="Using none-ls">
+        Use [none-ls](https://github.com/nvimtools/none-ls.nvim) to integrate ESLint as a code action source.
+      </Accordion>
+      <Accordion title="Using nvim-lint">
+        Use [nvim-lint](https://github.com/mfussenegger/nvim-lint) to run ESLint as a linter and trigger fixes on save.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Inspect your config
+
+Use the ESLint Config Inspector to visualize which rules are active in your project and which files they apply to:
+
+```bash
+npx @eslint/config-inspector
+```
+
+Run this command in your project root (where `eslint.config.mjs` lives). It opens an interactive browser UI at `http://localhost:7777`.
+
+<Tip>
+  The inspector is useful for debugging unexpected rule behavior or confirming that a particular integration is active.
+</Tip>

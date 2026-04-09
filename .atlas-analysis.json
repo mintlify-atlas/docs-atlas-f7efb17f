@@ -1,0 +1,107 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "ESLint Config",
+  "projectDescription": "A highly customizable, opinionated ESLint flat config preset for TypeScript, Vue, React, and many other ecosystems with auto-fix formatting built-in.",
+  "theme": "luma",
+  "primaryColor": "#4c34c4",
+  "lightColor": "#8383f3",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "getting-started",
+              "ide-setup"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/basic",
+              "configuration/stylistic",
+              "configuration/typescript",
+              "configuration/rules-overrides"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/vue",
+              "integrations/react",
+              "integrations/svelte",
+              "integrations/astro",
+              "integrations/angular",
+              "integrations/formatters"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/customization",
+              "guides/migration",
+              "guides/lint-staged",
+              "guides/versioning"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "API Reference",
+            "pages": [
+              "reference/config-options",
+              "reference/exported-configs",
+              "reference/plugin-renaming"
+            ]
+          },
+          {
+            "group": "FAQ",
+            "pages": [
+              "faq"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "ESLint Flat config support with easy composition via FlatConfigComposer",
+    "Auto-fix formatting as a Prettier replacement using ESLint Stylistic",
+    "Auto-detection of TypeScript, Vue, and other frameworks",
+    "CLI wizard for quick setup and migration from legacy ESLint config",
+    "Support for Vue, React, Next.js, Svelte, Astro, Solid, Angular, UnoCSS",
+    "External formatter integration for CSS, HTML, XML, Markdown",
+    "Plugin renaming for cleaner rule prefixes (e.g., ts/* instead of @typescript-eslint/*)",
+    "Respects .gitignore by default",
+    "Type-aware TypeScript rules via tsconfigPath option",
+    "Lint-staged and editor-aware rule management"
+  ],
+  "publicApiSurface": [
+    "antfu(options, ...userConfigs) — main factory function returning FlatConfigComposer",
+    "combine(...configs) — utility to merge multiple flat config arrays",
+    "javascript(options) — JavaScript rules config",
+    "typescript(options) — TypeScript rules config",
+    "vue(options) — Vue SFC rules config",
+    "react(options) — React rules config",
+    "stylistic(options) — ESLint Stylistic formatting rules",
+    "formatters(options) — external formatter (Prettier/dprint) integration",
+    "imports(options) — import order and validation rules",
+    "jsonc(options) — JSON/JSONC rules config",
+    "yaml(options) — YAML rules config",
+    "toml(options) — TOML rules config",
+    "markdown(options) — Markdown linting config",
+    "node(options) — Node.js rules config",
+    "ignores(userIgnores) — global ignores config",
+    "sortPackageJson() — sort package.json entries",
+    "sortTsconfig() — sort tsconfig.json entries",
+    "defaultPluginRenaming — plugin rename mapping object",
+    "OptionsConfig — TypeScript interface for all config options"
+  ]
+}

@@ -1,0 +1,88 @@
+---
+title: 'Lint staged'
+description: 'Run ESLint only on staged files before every commit using lint-staged and simple-git-hooks.'
+keywords: ['eslint', 'lint-staged', 'simple-git-hooks', 'pre-commit', 'git hooks']
+---
+
+Running ESLint on your entire codebase on every commit is slow. `lint-staged` solves this by running linters only on files staged for commit, giving you fast pre-commit checks without sacrificing coverage.
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">
+    <Tabs>
+      <Tab title="npm">
+        ```bash
+        npm i -D lint-staged simple-git-hooks
+        ```
+      </Tab>
+      <Tab title="pnpm">
+        ```bash
+        pnpm i -D lint-staged simple-git-hooks
+        ```
+      </Tab>
+      <Tab title="yarn">
+        ```bash
+        yarn add -D lint-staged simple-git-hooks
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Configure package.json">
+    Add the `simple-git-hooks` and `lint-staged` configuration to your `package.json`:
+
+    ```json
+    {
+      "simple-git-hooks": {
+        "pre-commit": "pnpm lint-staged"
+      },
+      "lint-staged": {
+        "*": "eslint --fix"
+      }
+    }
+    ```
+
+    This registers a `pre-commit` hook that runs `lint-staged`, which in turn runs `eslint --fix` on every staged file.
+  </Step>
+  <Step title="Activate the git hooks">
+    After adding the config, run the following command once to register the hooks with git:
+
+    ```bash
+    npx simple-git-hooks
+    ```
+
+    From this point on, ESLint will run automatically before every commit.
+  </Step>
+</Steps>
+
+## Editor-specific rule behavior
+
+Some rules are intentionally non-fixable when ESLint is running inside an editor to avoid disrupting your workflow during refactoring:
+
+- [`prefer-const`](https://eslint.org/docs/rules/prefer-const)
+- [`unused-imports/no-unused-imports`](https://www.npmjs.com/package/eslint-plugin-unused-imports)
+- [`test/no-only-tests`](https://github.com/levibuzolic/eslint-plugin-no-only-tests)
+- `pnpm/json-enforce-catalog`
+- `pnpm/json-prefer-workspace-settings`
+- `pnpm/json-valid-catalog`
+
+For example, unused imports won't be auto-removed while you're in the middle of editing a file. These rules are still reported as violations — they just won't be auto-fixed until you run ESLint outside the editor (such as via lint-staged).
+
+<Note>
+Since v3.16.0, these rules are made non-fixable (rather than fully disabled) in editor environments using the `.disableRulesFix()` method from `FlatConfigComposer`. They will still show as warnings/errors in your editor.
+</Note>
+
+## Disabling editor detection
+
+If you want these rules to be fixable everywhere, including in your editor, disable editor detection:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  isInEditor: false,
+})
+```
+
+This is useful if you want consistent behavior across all environments, or if you're setting up a CI-only config where editor behavior doesn't matter.

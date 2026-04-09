@@ -1,0 +1,274 @@
+---
+title: 'Customization'
+description: 'Advanced customization guide for @antfu/eslint-config using the FlatConfigComposer API and fine-grained config composition.'
+keywords: ['eslint', 'customization', 'flat config', 'FlatConfigComposer', 'override']
+---
+
+## Basic customization
+
+The `antfu()` function accepts an options object as its first argument for common configuration:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  // Type of the project. 'lib' for libraries, the default is 'app'
+  type: 'lib',
+
+  // `.eslintignore` is no longer supported in flat config, use `ignores` instead
+  // The `ignores` option is treated as global ignores and extends the defaults
+  ignores: [
+    '**/fixtures',
+  ],
+
+  // Enable stylistic formatting rules
+  stylistic: {
+    indent: 2, // 4, or 'tab'
+    quotes: 'single', // or 'double'
+  },
+
+  // TypeScript and Vue are autodetected; you can also explicitly enable them
+  typescript: true,
+  vue: true,
+
+  // Disable jsonc and yaml support
+  jsonc: false,
+  yaml: false,
+})
+```
+
+Any additional flat config items passed after the first argument are merged in:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  {
+    // Options for antfu's config
+  },
+
+  // From the second argument onwards, these are plain ESLint flat configs
+  {
+    files: ['**/*.ts'],
+    rules: {
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+  {
+    rules: {
+      'style/semi': ['error', 'never'],
+    },
+  },
+)
+```
+
+## Integration-level overrides
+
+Each integration accepts an `overrides` key to customize rules without needing a separate config entry:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  vue: {
+    overrides: {
+      'vue/operator-linebreak': ['error', 'before'],
+    },
+  },
+  typescript: {
+    overrides: {
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+})
+```
+
+## FlatConfigComposer API
+
+Since v2.10.0, `antfu()` returns a [`FlatConfigComposer`](https://github.com/antfu/eslint-flat-config-utils#composer) instance. This allows you to chain methods for more flexible composition.
+
+### `.prepend(...configs)`
+
+Inserts configs **before** the main config array. Useful for loading environment-specific configs or bootstrapping globals first.
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .prepend(
+    {
+      // configs to run before the main config
+    },
+  )
+```
+
+### `.append(...configs)`
+
+Inserts configs **after** the main config array. Used internally by `antfu()` to append user configs.
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .append(
+    {
+      rules: {
+        'no-console': 'warn',
+      },
+    },
+  )
+```
+
+### `.override(name, config)`
+
+Overrides a named config by merging the provided config into it. Named configs follow the pattern `antfu/<scope>/<purpose>`, for example:
+
+- `antfu/stylistic/rules`
+- `antfu/typescript/rules`
+- `antfu/javascript/rules`
+- `antfu/vue/rules`
+- `antfu/imports/rules`
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .override(
+    'antfu/stylistic/rules',
+    {
+      rules: {
+        'style/generator-star-spacing': ['error', { after: true, before: false }],
+      },
+    },
+  )
+```
+
+### `.renamePlugins(map)`
+
+Renames plugin prefixes across all configs. You can use this to revert the default plugin renaming or adapt other presets to use consistent prefixes.
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .renamePlugins({
+    ts: '@typescript-eslint',
+    yaml: 'yml',
+    node: 'n',
+    // ...
+  })
+```
+
+<Note>
+Since v2.9.0, `autoRenamePlugins` is enabled by default. This means the default plugin renaming also applies to your custom configs passed to `antfu()`. You can reference rules using the original prefix or the renamed one.
+</Note>
+
+### `.disableRulesFix(rules)`
+
+Makes the specified rules non-fixable (they will still report violations but won't auto-fix). This is used internally to disable auto-fix for certain rules when running in an editor.
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .disableRulesFix([
+    'prefer-const',
+    'unused-imports/no-unused-imports',
+  ])
+```
+
+## The `lessOpinionated` option
+
+This config includes several opinionated rules around code structure, such as `antfu/top-level-function` (top-level functions must use `function` declarations) and `antfu/if-newline` (if statements must be on separate lines). To disable these, set `lessOpinionated: true`:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  lessOpinionated: true,
+})
+```
+
+When `lessOpinionated` is enabled, the following opinionated rules are replaced with standard `curly: ['error', 'all']`:
+
+- `antfu/top-level-function`
+- `antfu/if-newline`
+- `antfu/curly`
+
+## Fine-grained config composition
+
+For full control, you can bypass `antfu()` entirely and compose individual config exports directly. This approach requires managing shared options manually.
+
+<Warning>
+This style is not recommended unless you know exactly what each config does. Shared options (like `stylistic`) must be kept consistent across configs manually.
+</Warning>
+
+```js
+// eslint.config.js
+import {
+  combine,
+  comments,
+  ignores,
+  imports,
+  javascript,
+  jsdoc,
+  jsonc,
+  markdown,
+  node,
+  sortPackageJson,
+  sortTsconfig,
+  stylistic,
+  toml,
+  typescript,
+  unicorn,
+  vue,
+  yaml,
+} from '@antfu/eslint-config'
+
+export default combine(
+  ignores(),
+  javascript(/* Options */),
+  comments(),
+  node(),
+  jsdoc(),
+  imports(),
+  unicorn(),
+  typescript(/* Options */),
+  stylistic(),
+  vue(),
+  jsonc(),
+  yaml(),
+  toml(),
+  markdown(),
+)
+```
+
+The `combine` utility merges arrays of flat config items, resolving any promises returned by async config functions.
+
+## Plugin prefix reference
+
+This config renames several plugins for a more consistent developer experience. When writing rule overrides or inline disable comments, use the renamed prefixes:
+
+| New prefix | Original prefix        |
+| ---------- | ---------------------- |
+| `import/*` | `import-lite/*`        |
+| `node/*`   | `n/*`                  |
+| `yaml/*`   | `yml/*`                |
+| `ts/*`     | `@typescript-eslint/*` |
+| `style/*`  | `@stylistic/*`         |
+| `test/*`   | `vitest/*`             |
+
+```diff
+-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
++// eslint-disable-next-line ts/consistent-type-definitions
+type foo = { bar: 2 }
+```

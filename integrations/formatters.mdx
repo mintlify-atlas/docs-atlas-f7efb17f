@@ -1,0 +1,294 @@
+---
+title: 'Formatters'
+description: 'Use external formatters to format CSS, HTML, XML, Markdown, GraphQL, and more via eslint-plugin-format.'
+keywords: ['formatters', 'prettier', 'dprint', 'css', 'html', 'xml', 'markdown', 'graphql', 'eslint-plugin-format']
+---
+
+ESLint is designed to lint JavaScript and TypeScript. For other file types — CSS, HTML, XML, GraphQL, and more — this config integrates external formatters via [`eslint-plugin-format`](https://github.com/antfu/eslint-plugin-format).
+
+## Quick start
+
+<Steps>
+  <Step title="Enable formatters in your config">
+    Pass `formatters: true` to enable all formatters with sensible defaults. When XML and SVG support requires `@prettier/plugin-xml`, those formatters are only enabled if the plugin is already installed.
+
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      formatters: true,
+    })
+    ```
+
+    Or pick specific formatters:
+
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      formatters: {
+        css: true,
+        html: true,
+        markdown: 'prettier',
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the base dependency">
+    <CodeGroup>
+      ```bash npm
+      npm i -D eslint-plugin-format
+      ```
+      ```bash pnpm
+      pnpm i -D eslint-plugin-format
+      ```
+      ```bash yarn
+      yarn add -D eslint-plugin-format
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Formatter options
+
+### CSS
+
+Formats `.css`, `.pcss`, `.postcss`, `.less`, and `.scss` files, and also `<style>` blocks in Vue SFCs. Uses Prettier.
+
+```js eslint.config.mjs
+export default antfu({
+  formatters: {
+    css: true,
+  },
+})
+```
+
+No additional packages are needed beyond `eslint-plugin-format`.
+
+---
+
+### HTML
+
+Formats `.html` files using Prettier.
+
+```js eslint.config.mjs
+export default antfu({
+  formatters: {
+    html: true,
+  },
+})
+```
+
+---
+
+### XML
+
+Formats `.xml` files using Prettier with `@prettier/plugin-xml`.
+
+<Steps>
+  <Step title="Enable XML formatting">
+    ```js eslint.config.mjs
+    export default antfu({
+      formatters: {
+        xml: true,
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the XML plugin">
+    <CodeGroup>
+      ```bash npm
+      npm i -D @prettier/plugin-xml
+      ```
+      ```bash pnpm
+      pnpm i -D @prettier/plugin-xml
+      ```
+      ```bash yarn
+      yarn add -D @prettier/plugin-xml
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+---
+
+### SVG
+
+Formats `.svg` files using Prettier with `@prettier/plugin-xml` (SVG is treated as XML).
+
+<Steps>
+  <Step title="Enable SVG formatting">
+    ```js eslint.config.mjs
+    export default antfu({
+      formatters: {
+        svg: true,
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the XML plugin">
+    <CodeGroup>
+      ```bash npm
+      npm i -D @prettier/plugin-xml
+      ```
+      ```bash pnpm
+      pnpm i -D @prettier/plugin-xml
+      ```
+      ```bash yarn
+      yarn add -D @prettier/plugin-xml
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+---
+
+### Markdown
+
+Formats `.md` files. Supports Prettier (default) or dprint.
+
+<Tabs>
+  <Tab title="Prettier">
+    ```js eslint.config.mjs
+    export default antfu({
+      formatters: {
+        markdown: 'prettier',
+        // or: markdown: true  (defaults to Prettier)
+      },
+    })
+    ```
+  </Tab>
+  <Tab title="dprint">
+    ```js eslint.config.mjs
+    export default antfu({
+      formatters: {
+        markdown: 'dprint',
+      },
+    })
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+### GraphQL
+
+Formats `.graphql` and `.gql` files using Prettier.
+
+```js eslint.config.mjs
+export default antfu({
+  formatters: {
+    graphql: true,
+  },
+})
+```
+
+---
+
+### Slidev
+
+Enables Prettier formatting for Slidev markdown presentation files (`slides.md` by default). Only works when `markdown` is also enabled with Prettier.
+
+<Steps>
+  <Step title="Enable Slidev formatting">
+    ```js eslint.config.mjs
+    export default antfu({
+      formatters: {
+        markdown: 'prettier',
+        slidev: true,
+
+        // Or target specific files:
+        slidev: {
+          files: ['**/slides.md'],
+        },
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the Slidev Prettier plugin">
+    <CodeGroup>
+      ```bash npm
+      npm i -D prettier-plugin-slidev
+      ```
+      ```bash pnpm
+      pnpm i -D prettier-plugin-slidev
+      ```
+      ```bash yarn
+      yarn add -D prettier-plugin-slidev
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+<Warning>
+  The `slidev` option only works when `markdown` is set to `true` or `'prettier'`. It will throw an error if markdown is set to `'dprint'` or not enabled.
+</Warning>
+
+---
+
+### Astro
+
+Formats `.astro` files using Prettier with `prettier-plugin-astro`. Requires the `astro` integration to also be enabled for linting.
+
+<Steps>
+  <Step title="Enable Astro formatting">
+    ```js eslint.config.mjs
+    export default antfu({
+      astro: true,
+      formatters: {
+        astro: true,
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the Astro Prettier plugin">
+    <CodeGroup>
+      ```bash npm
+      npm i -D prettier-plugin-astro
+      ```
+      ```bash pnpm
+      pnpm i -D prettier-plugin-astro
+      ```
+      ```bash yarn
+      yarn add -D prettier-plugin-astro
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+---
+
+## Custom Prettier options
+
+Pass `prettierOptions` to override the default Prettier configuration used across all formatters:
+
+```js eslint.config.mjs
+export default antfu({
+  formatters: {
+    css: true,
+    html: true,
+    prettierOptions: {
+      printWidth: 100,
+      singleQuote: true,
+      semi: false,
+    },
+  },
+})
+```
+
+Default Prettier options are derived from the active `stylistic` settings (indent, quotes, semi) and include `printWidth: 120`, `endOfLine: 'auto'`, and `trailingComma: 'all'`.
+
+## Custom dprint options
+
+Pass `dprintOptions` to provide custom dprint configuration for formatters that support it (currently Markdown with `dprint`):
+
+```js eslint.config.mjs
+export default antfu({
+  formatters: {
+    markdown: 'dprint',
+    dprintOptions: true,
+  },
+})
+```
+
+dprint options default to matching the active `stylistic` settings for `indentWidth`, `quoteStyle`, and `useTabs`.

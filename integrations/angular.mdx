@@ -1,0 +1,69 @@
+---
+title: 'Angular'
+description: 'ESLint integration for Angular TypeScript components and HTML templates.'
+keywords: ['angular', 'eslint', 'typescript', 'template', 'angular-eslint']
+---
+
+Angular support must be explicitly enabled — it is not auto-detected.
+
+## Enabling Angular
+
+<Steps>
+  <Step title="Enable Angular in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      angular: true,
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/template-parser
+      ```
+      ```bash pnpm
+      pnpm i -D @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/template-parser
+      ```
+      ```bash yarn
+      yarn add -D @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/template-parser
+      ```
+    </CodeGroup>
+
+    Running `npx eslint` will also prompt you to install these automatically.
+  </Step>
+</Steps>
+
+The Angular integration sets up two separate rule sets:
+
+- **TypeScript rules** (`angular/` prefix) — applied to `.ts` files. Includes lifecycle method validation, input/output naming conventions, and standalone component enforcement.
+- **Template rules** (`angular-template/` prefix) — applied to `.html` files using `@angular-eslint/template-parser`.
+
+Inline HTML templates inside TypeScript files are also processed via the `extract-inline-html` processor.
+
+## Rule overrides
+
+Use the `overrides` key inside the `angular` option to customize specific rules. Overrides are routed to the correct rule set based on the prefix: keys starting with `angular/` apply to TypeScript files, and keys starting with `angular-template/` apply to HTML templates.
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  angular: {
+    overrides: {
+      // TypeScript component rules
+      'angular/prefer-standalone': 'warn',
+      'angular/prefer-inject': 'off',
+
+      // Template rules
+      'angular-template/prefer-control-flow': 'warn',
+      'angular-template/eqeqeq': 'error',
+    },
+  },
+})
+```
+
+<Note>
+  Plugin prefixes are renamed from their npm package names. Use `angular/` instead of `@angular-eslint/`, and `angular-template/` instead of `@angular-eslint/template`. Some stylistic rules (`style/indent`, `style/no-trailing-spaces`) are automatically disabled in Angular template files to avoid conflicts with the template parser.
+</Note>

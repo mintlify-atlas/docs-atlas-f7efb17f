@@ -1,0 +1,479 @@
+---
+title: 'Config options'
+description: 'Complete reference for all options accepted by the antfu() factory function (OptionsConfig).'
+---
+
+The `antfu()` function accepts an `OptionsConfig` object as its first argument. All options are optional — the factory applies sensible defaults and auto-detects many settings from your project's installed dependencies.
+
+```ts
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  // options described on this page
+})
+```
+
+---
+
+## Core options
+
+<ParamField path="type" type="'app' | 'lib'" default="'app'">
+  Type of the project. Setting `'lib'` enables stricter rules appropriate for published libraries.
+</ParamField>
+
+<ParamField path="gitignore" type="boolean | FlatGitignoreOptions" default="true">
+  Parse the `.gitignore` file and respect its patterns as ESLint ignores. Pass an object to configure
+  [`eslint-config-flat-gitignore`](https://github.com/antfu/eslint-config-flat-gitignore) directly.
+</ParamField>
+
+<ParamField path="ignores" type="string[] | ((originals: string[]) => string[])">
+  Extend the global ignores list. Passing an array merges with the defaults. Passing a function receives the
+  default ignores array and returns a new one, giving full control.
+
+  ```js
+  export default antfu({
+    ignores: ['**/fixtures', '**/dist'],
+  })
+  ```
+
+  ```js
+  export default antfu({
+    ignores: originals => [...originals, '**/generated'],
+  })
+  ```
+</ParamField>
+
+<ParamField path="isInEditor" type="boolean" default="auto-detected">
+  Whether ESLint is running inside an editor. When `true`, certain auto-fix rules (like
+  `unused-imports/no-unused-imports`, `prefer-const`, and `test/no-only-tests`) are made non-fixable to
+  avoid destructive edits during active editing. Detected automatically from `process.env`.
+
+  ```js
+  export default antfu({
+    isInEditor: false, // force off editor mode
+  })
+  ```
+</ParamField>
+
+<ParamField path="lessOpinionated" type="boolean" default="false">
+  Disable some of Anthony's more opinionated rules. When enabled, the following rules are removed and replaced with `curly: ['error', 'all']`:
+
+  - `antfu/top-level-function` — enforces function declarations at the top level
+  - `antfu/if-newline` — enforces newlines in if-statements
+  - `antfu/curly` — custom curly brace style enforcement
+
+  ```js
+  export default antfu({
+    lessOpinionated: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="autoRenamePlugins" type="boolean" default="true">
+  Automatically apply [plugin renaming](/reference/plugin-renaming) to all configs, including your own custom
+  configs passed as additional arguments to `antfu()`. When enabled, you can use shortened prefixes like
+  `ts/*` instead of `@typescript-eslint/*` in your overrides and disable comments.
+</ParamField>
+
+<ParamField path="componentExts" type="string[]" default="[]">
+  Additional file extensions to treat as component files. These extensions will be included when applying
+  TypeScript rules. Vue files are added automatically when `vue` is enabled.
+
+  ```js
+  export default antfu({
+    componentExts: ['vue', 'svelte'],
+  })
+  ```
+</ParamField>
+
+---
+
+## Language and syntax options
+
+<ParamField path="javascript" type="OptionsOverrides">
+  Core JavaScript rules. Cannot be disabled. Pass an object to provide rule overrides.
+
+  <Expandable title="OptionsOverrides">
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific rules in this config block.
+    </ResponseField>
+  </Expandable>
+
+  ```js
+  export default antfu({
+    javascript: {
+      overrides: {
+        'no-console': 'off',
+      },
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="typescript" type="boolean | OptionsTypescript" default="auto-detected">
+  Enable TypeScript support. Auto-detected when `typescript` or `@typescript/native-preview` is in your
+  dependencies. Pass an object for advanced TypeScript configuration.
+
+  <Expandable title="OptionsTypescript (with type-aware rules)">
+    <ResponseField name="tsconfigPath" type="string">
+      Path to your `tsconfig.json`. When provided, type-aware rules are enabled.
+    </ResponseField>
+    <ResponseField name="overridesTypeAware" type="Record<string, RuleEntry>">
+      Override rules that require type information.
+    </ResponseField>
+    <ResponseField name="filesTypeAware" type="string[]" default="['**/*.{ts,tsx}']">
+      Glob patterns for files that should use type-aware linting.
+    </ResponseField>
+    <ResponseField name="ignoresTypeAware" type="string[]" default="['**/*.md/**', '**/*.astro/*.ts']">
+      Glob patterns for files to exclude from type-aware linting.
+    </ResponseField>
+    <ResponseField name="parserOptions" type="Partial<ParserOptions>">
+      Additional parser options forwarded to `@typescript-eslint/parser`.
+    </ResponseField>
+    <ResponseField name="erasableOnly" type="boolean" default="false">
+      Enable erasable syntax only rules via `eslint-plugin-erasable-syntax-only`.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific TypeScript rules.
+    </ResponseField>
+  </Expandable>
+
+  ```js
+  // Enable with type-aware rules
+  export default antfu({
+    typescript: {
+      tsconfigPath: 'tsconfig.json',
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="jsx" type="boolean | OptionsJSX" default="true">
+  Enable JSX-related rules. Pass an object to configure JSX accessibility support.
+
+  <Expandable title="OptionsJSX">
+    <ResponseField name="a11y" type="boolean | OptionsJSXA11y" default="false">
+      Enable JSX accessibility rules via `eslint-plugin-jsx-a11y`. Requires installing the package.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="node" type="boolean" default="true">
+  Enable Node.js rules via `eslint-plugin-n` (exposed as `node/*` prefix).
+</ParamField>
+
+<ParamField path="jsdoc" type="boolean" default="true">
+  Enable JSDoc rules via `eslint-plugin-jsdoc`.
+</ParamField>
+
+---
+
+## File format options
+
+<ParamField path="jsonc" type="boolean | OptionsOverrides" default="true">
+  Enable JSONC (JSON with comments) and JSON5 support. Also enables `sortPackageJson()` and
+  `sortTsconfig()` when active.
+</ParamField>
+
+<ParamField path="yaml" type="boolean | OptionsOverrides" default="true">
+  Enable YAML support via `eslint-plugin-yml` (exposed as `yaml/*` prefix).
+</ParamField>
+
+<ParamField path="toml" type="boolean | OptionsOverrides" default="true">
+  Enable TOML support via `eslint-plugin-toml`.
+</ParamField>
+
+<ParamField path="markdown" type="boolean | OptionsMarkdown" default="true">
+  Enable linting for code snippets inside Markdown files, and lint the Markdown content itself. For
+  formatting the Markdown prose, also enable `formatters.markdown`.
+
+  <Expandable title="OptionsMarkdown">
+    <ResponseField name="gfm" type="boolean" default="true">
+      Enable GitHub Flavored Markdown (GFM) support.
+    </ResponseField>
+    <ResponseField name="overridesMarkdown" type="Record<string, RuleEntry>">
+      Override rules that apply to Markdown content itself (not code snippets inside it).
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override rules for code snippets inside Markdown files.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+---
+
+## Stylistic options
+
+<ParamField path="stylistic" type="boolean | (StylisticConfig & OptionsOverrides)" default="true">
+  Enable stylistic formatting rules via `@stylistic/eslint-plugin` (exposed as `style/*` prefix).
+  Pass an object to customize the style configuration.
+
+  <Expandable title="StylisticConfig">
+    <ResponseField name="indent" type="number | 'tab'" default="2">
+      Indentation. Use a number for spaces or `'tab'` for tab characters.
+    </ResponseField>
+    <ResponseField name="quotes" type="'single' | 'double'" default="'single'">
+      Quote style for strings.
+    </ResponseField>
+    <ResponseField name="semi" type="boolean" default="false">
+      Whether to require semicolons.
+    </ResponseField>
+    <ResponseField name="jsx" type="boolean" default="true">
+      Whether JSX stylistic rules are included.
+    </ResponseField>
+    <ResponseField name="experimental" type="boolean" default="false">
+      Enable experimental stylistic rules.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific stylistic rules.
+    </ResponseField>
+  </Expandable>
+
+  ```js
+  export default antfu({
+    stylistic: {
+      indent: 4,
+      quotes: 'double',
+      semi: true,
+    },
+  })
+  ```
+</ParamField>
+
+---
+
+## Optional integrations
+
+These options are disabled by default and require additional packages to be installed.
+
+<ParamField path="vue" type="boolean | OptionsVue" default="auto-detected">
+  Enable Vue support. Auto-detected when `vue`, `nuxt`, `vitepress`, or `@slidev/cli` is installed.
+
+  <Expandable title="OptionsVue">
+    <ResponseField name="vueVersion" type="2 | 3" default="3">
+      Vue version. Applies the appropriate rules from `eslint-plugin-vue`.
+    </ResponseField>
+    <ResponseField name="sfcBlocks" type="boolean | VueBlocksOptions" default="true">
+      Create virtual files for Vue SFC blocks to enable linting inside `<script>` and `<template>`.
+    </ResponseField>
+    <ResponseField name="a11y" type="boolean" default="false">
+      Enable Vue accessibility rules via `eslint-plugin-vuejs-accessibility`.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific Vue rules.
+    </ResponseField>
+  </Expandable>
+
+  ```js
+  export default antfu({
+    vue: {
+      vueVersion: 3,
+      a11y: true,
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="react" type="boolean | OptionsReact" default="false">
+  Enable React support. Requires `@eslint-react/eslint-plugin` and `eslint-plugin-react-refresh`.
+
+  ```js
+  export default antfu({
+    react: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="nextjs" type="boolean | OptionsOverrides" default="false">
+  Enable Next.js rules. Requires `@next/eslint-plugin-next`.
+
+  ```js
+  export default antfu({
+    nextjs: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="svelte" type="boolean | OptionsOverrides" default="false">
+  Enable Svelte support. Requires `eslint-plugin-svelte`.
+
+  ```js
+  export default antfu({
+    svelte: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="astro" type="boolean | OptionsOverrides" default="false">
+  Enable Astro support. Requires `eslint-plugin-astro`. For formatting `.astro` files also install
+  `prettier-plugin-astro`.
+
+  ```js
+  export default antfu({
+    astro: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="solid" type="boolean | OptionsOverrides" default="false">
+  Enable Solid.js support. Requires `eslint-plugin-solid`.
+
+  ```js
+  export default antfu({
+    solid: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="angular" type="boolean | OptionsOverrides" default="false">
+  Enable Angular support. Requires `@angular-eslint/eslint-plugin`, `@angular-eslint/eslint-plugin-template`,
+  and `@angular-eslint/template-parser`.
+
+  ```js
+  export default antfu({
+    angular: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="unocss" type="boolean | OptionsUnoCSS" default="false">
+  Enable UnoCSS rules. Requires `@unocss/eslint-plugin`.
+
+  <Expandable title="OptionsUnoCSS">
+    <ResponseField name="attributify" type="boolean" default="true">
+      Enable attributify support.
+    </ResponseField>
+    <ResponseField name="strict" type="boolean" default="false">
+      Enable strict mode, throwing errors for blocklisted classes.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific UnoCSS rules.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="pnpm" type="boolean | OptionsPnpm" default="auto-detected">
+  Enable pnpm workspace and catalog linting support. Auto-detected when `pnpm-workspace.yaml` is present.
+  Currently experimental.
+
+  <Expandable title="OptionsPnpm">
+    <ResponseField name="catalogs" type="boolean">
+      Require catalog usage. Auto-detected from `pnpm-workspace.yaml`.
+    </ResponseField>
+    <ResponseField name="json" type="boolean" default="true">
+      Enable linting for `package.json` files.
+    </ResponseField>
+    <ResponseField name="yaml" type="boolean" default="true">
+      Enable linting for `pnpm-workspace.yaml`.
+    </ResponseField>
+    <ResponseField name="sort" type="boolean" default="false">
+      Sort entries in `pnpm-workspace.yaml`.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+---
+
+## Other options
+
+<ParamField path="test" type="boolean | OptionsOverrides" default="true">
+  Enable test file rules via `@vitest/eslint-plugin` and `eslint-plugin-no-only-tests` (exposed as `test/*`
+  prefix).
+</ParamField>
+
+<ParamField path="regexp" type="boolean | (OptionsRegExp & OptionsOverrides)" default="true">
+  Enable regular expression linting rules via `eslint-plugin-regexp`.
+
+  <Expandable title="OptionsRegExp">
+    <ResponseField name="level" type="'error' | 'warn'" default="'error'">
+      Severity level for regexp rules.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific regexp rules.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="e18e" type="boolean | OptionsE18e" default="true">
+  Enable ecosystem performance rules via `@e18e/eslint-plugin`.
+
+  <Expandable title="OptionsE18e">
+    <ResponseField name="modernization" type="boolean" default="true">
+      Include modernization rules.
+    </ResponseField>
+    <ResponseField name="moduleReplacements" type="boolean" default="type === 'lib' && isInEditor">
+      Include module replacement rules (prefer modern equivalents).
+    </ResponseField>
+    <ResponseField name="performanceImprovements" type="boolean" default="true">
+      Include performance improvement rules.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific e18e rules.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="unicorn" type="boolean | OptionsUnicorn" default="true">
+  Enable a curated set of rules from `eslint-plugin-unicorn`.
+
+  <Expandable title="OptionsUnicorn">
+    <ResponseField name="allRecommended" type="boolean" default="false">
+      Include all rules recommended by `eslint-plugin-unicorn` rather than just the subset curated by Anthony.
+    </ResponseField>
+    <ResponseField name="overrides" type="Record<string, RuleEntry>">
+      Override specific unicorn rules.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="imports" type="boolean | OptionsOverrides" default="true">
+  Enable import-related rules via `eslint-plugin-import-lite` (exposed as `import/*` prefix).
+</ParamField>
+
+<ParamField path="formatters" type="boolean | OptionsFormatters" default="false">
+  Use external formatters (Prettier or dprint) for file types ESLint does not handle natively.
+  Requires `eslint-plugin-format`. When set to `true`, all formatters are enabled automatically.
+
+  <Expandable title="OptionsFormatters">
+    <ResponseField name="css" type="'prettier' | boolean">
+      Format CSS, Less, Sass, and SCSS files.
+    </ResponseField>
+    <ResponseField name="html" type="'prettier' | boolean">
+      Format HTML files.
+    </ResponseField>
+    <ResponseField name="xml" type="'prettier' | boolean">
+      Format XML files. Requires `@prettier/plugin-xml`.
+    </ResponseField>
+    <ResponseField name="svg" type="'prettier' | boolean">
+      Format SVG files. Requires `@prettier/plugin-xml`.
+    </ResponseField>
+    <ResponseField name="markdown" type="'prettier' | 'dprint' | boolean">
+      Format Markdown files. Supports both Prettier and dprint. Defaults to Prettier when `true`.
+    </ResponseField>
+    <ResponseField name="graphql" type="'prettier' | boolean">
+      Format GraphQL files.
+    </ResponseField>
+    <ResponseField name="astro" type="'prettier' | boolean">
+      Format Astro files. Requires `prettier-plugin-astro`.
+    </ResponseField>
+    <ResponseField name="slidev" type="boolean | { files?: string[] }">
+      Enable Prettier plugin for Slidev Markdown. Only works when `markdown` is `'prettier'` or `true`.
+    </ResponseField>
+    <ResponseField name="prettierOptions" type="VendoredPrettierOptions">
+      Custom options passed directly to Prettier.
+    </ResponseField>
+    <ResponseField name="dprintOptions" type="boolean">
+      Custom options for dprint.
+    </ResponseField>
+  </Expandable>
+
+  ```js
+  export default antfu({
+    formatters: {
+      css: true,
+      html: true,
+      markdown: 'prettier',
+    },
+  })
+  ```
+</ParamField>

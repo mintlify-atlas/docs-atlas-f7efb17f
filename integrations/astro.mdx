@@ -1,0 +1,111 @@
+---
+title: 'Astro'
+description: 'ESLint integration for Astro components, with optional Prettier-based formatting for .astro files.'
+keywords: ['astro', 'eslint', 'prettier', 'formatter', 'typescript']
+---
+
+Astro support must be explicitly enabled — it is not auto-detected.
+
+## Enabling Astro
+
+<Steps>
+  <Step title="Enable Astro in your config">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      astro: true,
+    })
+    ```
+  </Step>
+  <Step title="Install required dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm i -D eslint-plugin-astro
+      ```
+      ```bash pnpm
+      pnpm i -D eslint-plugin-astro
+      ```
+      ```bash yarn
+      yarn add -D eslint-plugin-astro
+      ```
+    </CodeGroup>
+
+    Running `npx eslint` will also prompt you to install these automatically.
+  </Step>
+</Steps>
+
+The integration uses `eslint-plugin-astro` for rules, `astro-eslint-parser` as the parser for `.astro` files, and `@typescript-eslint/parser` for the TypeScript content inside those files.
+
+<Note>
+  Top-level `await` is allowed in Astro components by default, as Astro uses it for data fetching at the component level.
+</Note>
+
+## Formatting .astro files
+
+Linting Astro files is handled by the `astro` integration. To also **format** `.astro` files, enable Prettier formatting via the `formatters` option with `astro: true`. This requires `prettier-plugin-astro`:
+
+<Steps>
+  <Step title="Enable Astro formatting">
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      astro: true,
+      formatters: {
+        astro: true,
+      },
+    })
+    ```
+  </Step>
+  <Step title="Install the Prettier plugin">
+    <CodeGroup>
+      ```bash npm
+      npm i -D eslint-plugin-format prettier-plugin-astro
+      ```
+      ```bash pnpm
+      pnpm i -D eslint-plugin-format prettier-plugin-astro
+      ```
+      ```bash yarn
+      yarn add -D eslint-plugin-format prettier-plugin-astro
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Stylistic formatting
+
+Stylistic rules are enabled by default. When active, the Astro integration disables several general stylistic rules that conflict with Astro's template syntax (`style/indent`, `style/jsx-closing-tag-location`, `style/jsx-one-expression-per-line`, and `style/no-multiple-empty-lines`).
+
+## Rule overrides
+
+Use the `overrides` key inside the `astro` option to customize specific rules:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  astro: {
+    overrides: {
+      'astro/no-set-html-directive': 'error',
+      'astro/semi': ['error', 'always'],
+    },
+  },
+})
+```
+
+You can also pass overrides as a separate flat config with explicit `files`:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  { astro: true },
+  {
+    files: ['**/*.astro'],
+    rules: {
+      'astro/valid-compile': 'warn',
+    },
+  },
+)
+```

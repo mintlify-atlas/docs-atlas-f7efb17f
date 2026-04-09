@@ -1,97 +1,72 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "ESLint Config"
+description: "Anthony's opinionated ESLint flat config preset — one line of config with auto-fix formatting, TypeScript, Vue, React, and much more."
 ---
 
-## Setting up
+`@antfu/eslint-config` is a highly opinionated, composable ESLint flat config preset designed for modern JavaScript and TypeScript projects. It replaces Prettier for formatting, auto-detects your frameworks, and gets you linting with a single line of code.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="rocket" href="/getting-started">
+    Install and configure `@antfu/eslint-config` in minutes using the CLI wizard or manual setup.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Configuration" icon="sliders" href="/configuration/basic">
+    Learn how to customize TypeScript, stylistic rules, integrations, and more.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Integrations" icon="puzzle-piece" href="/integrations/vue">
+    Enable support for Vue, React, Svelte, Astro, Angular, and external formatters.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/reference/config-options">
+    Full reference for all configuration options and exported utilities.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Why @antfu/eslint-config?
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="One line of config" icon="bolt">
+    Call `antfu()` and you get a fully configured ESLint setup with sensible defaults. No boilerplate.
+  </Card>
+  <Card title="Replaces Prettier" icon="wand-magic-sparkles">
+    Auto-fix formatting is built in via ESLint Stylistic — no need for a separate formatter.
+  </Card>
+  <Card title="Framework auto-detection" icon="magnifying-glass">
+    TypeScript, Vue, and more are detected automatically based on your installed packages.
+  </Card>
+  <Card title="Highly composable" icon="layer-group">
+    Built on ESLint Flat Config. Chain overrides, prepend configs, and compose freely.
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Quick start
 
-## Need inspiration?
+<Steps>
+  <Step title="Run the setup wizard">
+    The CLI wizard installs dependencies and generates your `eslint.config.mjs` automatically.
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+    ```bash
+    pnpm dlx @antfu/eslint-config@latest
+    ```
+  </Step>
+  <Step title="Add lint scripts">
+    Add these scripts to your `package.json`:
+
+    ```json package.json
+    {
+      "scripts": {
+        "lint": "eslint",
+        "lint:fix": "eslint --fix"
+      }
+    }
+    ```
+  </Step>
+  <Step title="Run ESLint">
+    ```bash
+    pnpm lint
+    pnpm lint:fix
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  If you prefer manual setup, see the [Getting Started](/getting-started) guide for step-by-step instructions.
+</Tip>

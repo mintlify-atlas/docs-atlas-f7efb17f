@@ -1,0 +1,209 @@
+---
+title: 'Stylistic formatting'
+description: 'Configure ESLint Stylistic formatting rules — indentation, quotes, semicolons, and more.'
+---
+
+This config uses [ESLint Stylistic](https://eslint.style/) (`@stylistic/eslint-plugin`) to handle code formatting, replacing the need for a separate Prettier or dprint setup for JavaScript and TypeScript files.
+
+## Style principle
+
+> **Minimal for reading, stable for diff, consistent.**
+
+The defaults are chosen to reduce visual noise and keep diffs clean:
+
+- Single quotes
+- No semicolons
+- Sorted imports
+- Dangling commas
+- 2-space indentation
+
+## The `stylistic` option
+
+<ParamField path="stylistic" type="boolean | StylisticConfig" default="true">
+  Enable or configure stylistic formatting rules. Pass `false` to disable all stylistic rules. Pass an object to customise specific settings.
+
+  ```js
+  export default antfu({
+    // Enable with defaults (same as omitting the option)
+    stylistic: true,
+  })
+  ```
+
+  ```js
+  export default antfu({
+    // Disable all stylistic rules
+    stylistic: false,
+  })
+  ```
+</ParamField>
+
+### Configuration object
+
+When you pass an object, only the fields you specify are changed — the rest use their defaults.
+
+<ParamField path="stylistic.indent" type="number | 'tab'" default="2">
+  Indentation size. Use a number for spaces or `'tab'` for tab-based indentation.
+
+  ```js
+  export default antfu({
+    stylistic: {
+      indent: 4,
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="stylistic.quotes" type='"single" | "double"' default='"single"'>
+  String quote style. Defaults to single quotes.
+
+  ```js
+  export default antfu({
+    stylistic: {
+      quotes: 'double',
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="stylistic.semi" type="boolean" default="false">
+  Whether to require semicolons at the end of statements. Defaults to `false` (no semicolons).
+
+  ```js
+  export default antfu({
+    stylistic: {
+      semi: true,
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="stylistic.jsx" type="boolean" default="true">
+  Enable JSX formatting rules. Enabled automatically when JSX support is active.
+
+  ```js
+  export default antfu({
+    stylistic: {
+      jsx: false,
+    },
+  })
+  ```
+</ParamField>
+
+<ParamField path="stylistic.experimental" type="boolean" default="false">
+  Enable experimental stylistic rules from `@stylistic/eslint-plugin`. When disabled, `antfu/consistent-list-newline` is added instead.
+
+  ```js
+  export default antfu({
+    stylistic: {
+      experimental: true,
+    },
+  })
+  ```
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```js Defaults (single quotes, no semi, 2 spaces)
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  stylistic: {
+    indent: 2,
+    quotes: 'single',
+    semi: false,
+  },
+})
+```
+
+```js 4-space indent, double quotes, semicolons
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  stylistic: {
+    indent: 4,
+    quotes: 'double',
+    semi: true,
+  },
+})
+```
+
+```js Tab indentation
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  stylistic: {
+    indent: 'tab',
+  },
+})
+```
+
+```js Disabled
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  stylistic: false,
+})
+```
+
+</CodeGroup>
+
+## Overriding individual stylistic rules
+
+Use the `overrides` field inside the `stylistic` option to override specific rules while keeping the rest of the preset intact.
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  stylistic: {
+    overrides: {
+      'style/generator-star-spacing': ['error', { after: true, before: false }],
+      'style/yield-star-spacing': ['error', { after: true, before: false }],
+    },
+  },
+})
+```
+
+You can also use the `.override()` method on the returned `FlatConfigComposer`:
+
+```js
+export default antfu()
+  .override('antfu/stylistic/rules', {
+    rules: {
+      'style/semi': ['error', 'always'],
+    },
+  })
+```
+
+<Note>
+  Stylistic rules use the `style/*` prefix (renamed from `@stylistic/*`). When writing inline disable comments, use the new prefix: `// eslint-disable-next-line style/semi`.
+</Note>
+
+## IDE integration
+
+To silence stylistic warnings in your editor while still applying auto-fixes on save, configure your editor to treat stylistic rules as non-errors. For VS Code, add the following to `.vscode/settings.json`:
+
+```jsonc
+{
+  "eslint.rules.customizations": [
+    { "rule": "style/*", "severity": "off", "fixable": true },
+    { "rule": "*-indent", "severity": "off", "fixable": true },
+    { "rule": "*-spacing", "severity": "off", "fixable": true },
+    { "rule": "*-spaces", "severity": "off", "fixable": true },
+    { "rule": "*-order", "severity": "off", "fixable": true },
+    { "rule": "*-dangle", "severity": "off", "fixable": true },
+    { "rule": "*-newline", "severity": "off", "fixable": true },
+    { "rule": "*quotes", "severity": "off", "fixable": true },
+    { "rule": "*semi", "severity": "off", "fixable": true }
+  ]
+}
+```
+
+This keeps the editor clean while ESLint still fixes formatting on save and in CI.

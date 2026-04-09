@@ -1,0 +1,74 @@
+---
+title: 'Introduction'
+description: 'An opinionated ESLint config preset for TypeScript, Vue, and more — without Prettier.'
+---
+
+`@antfu/eslint-config` is a personal ESLint config preset by [Anthony Fu](https://github.com/antfu). It uses [ESLint Flat config](https://eslint.org/docs/latest/use/configure/configuration-files-new) and is designed to be the only linting and formatting tool you need — replacing Prettier entirely.
+
+<Warning>
+  This is a personal config with strong opinions. Changes might not work for every use case. If you use this config directly, review the changelog each time you update. You can always fork it for more control.
+</Warning>
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="One-line setup" icon="bolt">
+    A single `antfu()` call in `eslint.config.mjs` is all you need to get started.
+  </Card>
+  <Card title="Auto-detects TypeScript and Vue" icon="magnifying-glass">
+    TypeScript and Vue support are enabled automatically based on your installed dependencies — no manual configuration required.
+  </Card>
+  <Card title="Replaces Prettier" icon="paintbrush">
+    Uses [ESLint Stylistic](https://eslint.style/) for formatting. No need to run a separate formatter for JS/TS files.
+  </Card>
+  <Card title="Flat config" icon="layer-group">
+    Built on ESLint's modern flat config system. Configs compose cleanly and are easy to extend.
+  </Card>
+  <Card title="Wide language support" icon="file-code">
+    Works out of the box with TypeScript, JSX, Vue, JSON, YAML, TOML, Markdown, and more.
+  </Card>
+  <Card title="Optional integrations" icon="plug">
+    Opt-in support for React, Next.js, Svelte, Astro, Solid, UnoCSS, and external formatters.
+  </Card>
+</CardGroup>
+
+## Style principles
+
+The formatting choices in this config follow a clear philosophy:
+
+- **Minimal for reading** — less visual noise, easier to scan
+- **Stable for diff** — formatting decisions reduce noisy diffs in code review
+- **Consistent** — one style, applied everywhere
+
+Concretely, this means:
+
+- Single quotes, no semicolons
+- Sorted imports and dangling commas
+- 2-space indentation
+- Formatting via [ESLint Stylistic](https://github.com/eslint-stylistic/eslint-stylistic) (not Prettier)
+
+<Tip>
+  Interested in the philosophy behind this config? Anthony gave a talk at JSNation 2024: [ESLint One for All Made Easy](https://gitnation.com/contents/eslint-one-for-all-made-easy).
+</Tip>
+
+## Requirements
+
+- ESLint v9.5.0 or higher
+- Node.js (current LTS recommended)
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Get started" icon="rocket" href="/getting-started">
+    Install the package and create your config file in minutes.
+  </Card>
+  <Card title="IDE setup" icon="display" href="/ide-setup">
+    Configure VS Code, Zed, or Neovim for auto-fix on save.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration/basic">
+    Learn how to enable and customize individual integrations.
+  </Card>
+  <Card title="Customization guide" icon="wrench" href="/guides/customization">
+    Override rules, extend configs, and compose your own setup.
+  </Card>
+</CardGroup>

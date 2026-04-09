@@ -1,0 +1,238 @@
+---
+title: 'Rules and overrides'
+description: 'Override rules per-integration, per-file, or globally using the overrides option and FlatConfigComposer methods.'
+---
+
+There are several ways to override the default rules in this config, depending on how specific you need to be.
+
+## Per-integration overrides
+
+Each integration (TypeScript, Vue, YAML, etc.) accepts an `overrides` object. This is the recommended way to customise rules for a specific language or file type, because the rules are scoped correctly to the integration's file patterns.
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  vue: {
+    overrides: {
+      'vue/operator-linebreak': ['error', 'before'],
+    },
+  },
+  typescript: {
+    overrides: {
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+  stylistic: {
+    overrides: {
+      'style/semi': ['error', 'never'],
+    },
+  },
+  yaml: {
+    overrides: {
+      'yaml/quotes': ['error', { prefer: 'single' }],
+    },
+  },
+})
+```
+
+## File-specific overrides
+
+To apply rules only to certain files, pass additional flat config objects as subsequent arguments to `antfu()`. Always specify a `files` glob when the rules are plugin-specific, to avoid the plugin processing files it shouldn't.
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  {
+    vue: true,
+    typescript: true,
+  },
+  {
+    // Scoped to .vue files only
+    files: ['**/*.vue'],
+    rules: {
+      'vue/operator-linebreak': ['error', 'before'],
+    },
+  },
+  {
+    // No `files` — applies to all files
+    rules: {
+      'style/semi': ['error', 'never'],
+    },
+  },
+)
+```
+
+<Warning>
+  Without a `files` glob, rules from Vue or other language-specific plugins may run on files they are not designed for. Always scope plugin-specific rules with a matching glob.
+</Warning>
+
+## Using `.override()` on FlatConfigComposer
+
+The `antfu()` function returns a `FlatConfigComposer`. You can call `.override()` on it to merge rules into a specific named config. This is useful when you want to change a rule that belongs to a particular config block.
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .override('antfu/stylistic/rules', {
+    rules: {
+      'style/generator-star-spacing': ['error', { after: true, before: false }],
+    },
+  })
+  .override('antfu/typescript/rules', {
+    rules: {
+      'ts/no-explicit-any': 'warn',
+    },
+  })
+```
+
+<Tip>
+  Use `@eslint/config-inspector` to see all named config blocks and the rules they contain:
+
+  ```bash
+  npx @eslint/config-inspector
+  ```
+</Tip>
+
+## Plugin renaming
+
+This config renames several plugins to shorter, consistent prefixes. When writing rules or inline disable comments, use the **new prefix**.
+
+| New prefix | Original prefix | Plugin |
+| ---------- | --------------- | ------ |
+| `ts/*` | `@typescript-eslint/*` | `@typescript-eslint/eslint-plugin` |
+| `style/*` | `@stylistic/*` | `@stylistic/eslint-plugin` |
+| `import/*` | `import-lite/*` | `eslint-plugin-import-lite` |
+| `node/*` | `n/*` | `eslint-plugin-n` |
+| `yaml/*` | `yml/*` | `eslint-plugin-yml` |
+| `test/*` | `vitest/*` | `@vitest/eslint-plugin` |
+| `next/*` | `@next/next` | `@next/eslint-plugin-next` |
+
+Update inline disable comments to use the new prefix:
+
+```diff
+-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
++// eslint-disable-next-line ts/consistent-type-definitions
+type foo = { bar: 2 }
+```
+
+Since v2.9.0, plugin renaming is also applied to your custom config objects automatically. You can still use original prefixes in rule names when passing your own configs — they will be renamed to match.
+
+### Reverting plugin renaming
+
+If you need to use the original plugin prefixes (for example, to combine with another preset that expects them), revert the renaming using `.renamePlugins()`:
+
+```js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .renamePlugins({
+    ts: '@typescript-eslint',
+    yaml: 'yml',
+    node: 'n',
+  })
+```
+
+## Editor-specific disables
+
+When ESLint detects it is running inside an editor (via environment variables), certain rules are made **non-fixable** instead of being disabled. This prevents the editor from making unwanted auto-fixes during refactoring.
+
+The affected rules are:
+
+- [`prefer-const`](https://eslint.org/docs/rules/prefer-const) — prevents variables from being changed to `const` while you are actively editing
+- [`unused-imports/no-unused-imports`](https://www.npmjs.com/package/eslint-plugin-unused-imports) — prevents imports from being removed while refactoring
+- [`test/no-only-tests`](https://github.com/levibuzolic/eslint-plugin-no-only-tests) — prevents `.only` test removal during development
+- `pnpm/json-enforce-catalog` — pnpm catalog enforcement (when pnpm integration is active)
+- `pnpm/json-prefer-workspace-settings` — pnpm workspace settings preference
+- `pnpm/json-valid-catalog` — pnpm catalog validity checks
+
+These rules are still enforced when you run ESLint in the terminal or via lint-staged.
+
+To disable this behaviour and always apply all fixes:
+
+```js
+export default antfu({
+  isInEditor: false,
+})
+```
+
+<Note>
+  Since v3.16.0, these rules are made non-fixable (using `disableRulesFix`) rather than fully disabled. They still report violations — they just won't auto-fix while in an editor.
+</Note>
+
+## Complete override examples
+
+### Override TypeScript rules
+
+```js
+export default antfu({
+  typescript: {
+    tsconfigPath: 'tsconfig.json',
+    overrides: {
+      'ts/consistent-type-definitions': ['error', 'type'],
+      'ts/no-explicit-any': 'warn',
+      'ts/no-non-null-assertion': 'error',
+    },
+    overridesTypeAware: {
+      'ts/strict-boolean-expressions': 'off',
+    },
+  },
+})
+```
+
+### Override Vue rules
+
+```js
+export default antfu({
+  vue: {
+    overrides: {
+      'vue/operator-linebreak': ['error', 'before'],
+      'vue/html-self-closing': ['error', {
+        html: { void: 'always', normal: 'always', component: 'always' },
+      }],
+    },
+  },
+})
+```
+
+### Override stylistic rules
+
+```js
+export default antfu({
+  stylistic: {
+    indent: 2,
+    quotes: 'single',
+    semi: false,
+    overrides: {
+      'style/brace-style': ['error', '1tbs'],
+      'style/arrow-parens': ['error', 'always'],
+    },
+  },
+})
+```
+
+### Mix per-integration and file-specific overrides
+
+```js
+export default antfu(
+  {
+    typescript: {
+      overrides: {
+        'ts/consistent-type-definitions': ['error', 'interface'],
+      },
+    },
+  },
+  {
+    // Only in test files
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      'ts/no-explicit-any': 'off',
+    },
+  },
+)
+```

@@ -1,0 +1,211 @@
+---
+title: 'Basic configuration'
+description: 'Configure the antfu() factory function — project type, ignores, editor detection, and the FlatConfigComposer API.'
+---
+
+The `antfu()` function is the main entry point for this config. It accepts an options object as its first argument and any number of additional ESLint flat config objects as subsequent arguments.
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+```
+
+The function returns a [`FlatConfigComposer`](#flatconfigcomposer) instance, which you can chain to further customize the resolved config.
+
+## Options
+
+<ParamField path="type" type='"app" | "lib"' default='"app"'>
+  Type of the project. Set to `"lib"` to enable stricter rules suited for published libraries, such as requiring explicit function return types (`ts/explicit-function-return-type`).
+
+  ```js
+  export default antfu({
+    type: 'lib',
+  })
+  ```
+</ParamField>
+
+<ParamField path="gitignore" type="boolean | FlatGitignoreOptions" default="true">
+  Parse the `.gitignore` file in the project root and add its patterns to ESLint's ignore list. Accepts `false` to disable, or an options object to configure [`eslint-config-flat-gitignore`](https://github.com/antfu/eslint-config-flat-gitignore) directly.
+
+  ```js
+  export default antfu({
+    gitignore: true, // default — reads .gitignore automatically
+  })
+  ```
+</ParamField>
+
+<ParamField path="ignores" type="string[] | ((originals: string[]) => string[])">
+  Extend the global ignore patterns. This option is treated as **additive** — it extends the defaults rather than replacing them.
+
+  Pass an array of glob strings to add patterns, or pass a function that receives the default ignore patterns and returns the full set.
+
+  ```js
+  export default antfu({
+    ignores: [
+      '**/fixtures',
+      '**/dist',
+    ],
+  })
+  ```
+
+  <Note>
+    `.eslintignore` is not supported in flat config. Use this option or a `.gitignore` file instead.
+  </Note>
+</ParamField>
+
+<ParamField path="isInEditor" type="boolean">
+  Controls whether editor-specific behaviour is active. When `true`, certain auto-fix rules are made non-fixable so they don't trigger during editing. By default this is auto-detected from environment variables set by VS Code, Zed, and other editors.
+
+  Set to `false` to disable the detection and always apply all fixes:
+
+  ```js
+  export default antfu({
+    isInEditor: false,
+  })
+  ```
+
+  See [editor-specific disables](/configuration/rules-overrides#editor-specific-disables) for the list of affected rules.
+</ParamField>
+
+<ParamField path="lessOpinionated" type="boolean" default="false">
+  Disable a set of opinionated rules that reflect Anthony's personal preferences. When enabled, the following rules are removed and replaced with `curly: ['error', 'all']`:
+
+  - `antfu/top-level-function` — enforces function declarations at the top level
+  - `antfu/if-newline` — enforces a newline after `if`
+  - `antfu/curly` — custom curly brace style enforcement
+
+  ```js
+  export default antfu({
+    lessOpinionated: true,
+  })
+  ```
+</ParamField>
+
+<ParamField path="autoRenamePlugins" type="boolean" default="true">
+  Automatically rename plugins to use shorter, consistent prefixes. For example, `@typescript-eslint` becomes `ts`, and `@stylistic` becomes `style`. See [plugin renaming](/configuration/rules-overrides#plugin-renaming) for the full mapping.
+
+  Disable only if you need to integrate a config that relies on the original plugin names:
+
+  ```js
+  export default antfu({
+    autoRenamePlugins: false,
+  })
+  ```
+</ParamField>
+
+## Passing additional flat configs
+
+From the second argument onward, `antfu()` accepts standard ESLint flat config objects. These are appended after the preset configs.
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  {
+    // antfu options go in the first argument
+    type: 'app',
+  },
+
+  // Additional flat configs from the second argument onward
+  {
+    files: ['**/*.ts'],
+    rules: {
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+  {
+    // No `files` — applies to all files
+    rules: {
+      'style/semi': ['error', 'never'],
+    },
+  },
+)
+```
+
+<Tip>
+  You can also spread the output of `@eslint/eslintrc`'s `FlatCompat` here to continue using legacy configs during migration.
+</Tip>
+
+## FlatConfigComposer
+
+`antfu()` returns a `FlatConfigComposer` from [`eslint-flat-config-utils`](https://github.com/antfu/eslint-flat-config-utils#composer). You can chain its methods to compose the config further after calling `antfu()`.
+
+### Methods
+
+<ParamField path=".prepend(...configs)" type="method">
+  Insert flat config items **before** the antfu preset configs.
+
+  ```js
+  export default antfu()
+    .prepend(
+      { rules: { 'no-console': 'warn' } },
+    )
+  ```
+</ParamField>
+
+<ParamField path=".append(...configs)" type="method">
+  Insert flat config items **after** all existing configs. Equivalent to passing additional arguments to `antfu()`.
+
+  ```js
+  export default antfu()
+    .append(
+      { rules: { 'no-debugger': 'error' } },
+    )
+  ```
+</ParamField>
+
+<ParamField path=".override(name, config)" type="method">
+  Override a named config by merging the provided config into it. Use this to tweak specific rule sets without replacing the whole config.
+
+  ```js
+  export default antfu()
+    .override('antfu/stylistic/rules', {
+      rules: {
+        'style/generator-star-spacing': ['error', { after: true, before: false }],
+      },
+    })
+  ```
+</ParamField>
+
+<ParamField path=".renamePlugins(map)" type="method">
+  Rename plugin prefixes across all resolved configs. Useful for reverting the default plugin renaming or resolving naming collisions.
+
+  ```js
+  export default antfu()
+    .renamePlugins({
+      ts: '@typescript-eslint',
+      yaml: 'yml',
+      node: 'n',
+    })
+  ```
+</ParamField>
+
+## Combining with other flat configs
+
+If you use configs from other packages or need to interop with the legacy `.eslintrc` format, combine them after the antfu call:
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+import { FlatCompat } from '@eslint/eslintrc'
+
+const compat = new FlatCompat()
+
+export default antfu(
+  {
+    ignores: [],
+  },
+
+  // Legacy config interop
+  ...compat.config({
+    extends: [
+      'eslint:recommended',
+    ],
+  }),
+
+  // Other flat configs
+)
+```

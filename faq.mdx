@@ -1,0 +1,173 @@
+---
+title: 'FAQ'
+description: 'Frequently asked questions about @antfu/eslint-config.'
+---
+
+<AccordionGroup>
+
+<Accordion title="Why not Prettier?">
+  Anthony's detailed reasoning is in the post [Why I don't use Prettier](https://antfu.me/posts/why-not-prettier).
+  The short version: ESLint formatters preserve your intentional formatting decisions (like manual line
+  breaks) rather than reprinting everything from the AST, which produces cleaner and more stable diffs.
+
+  That said, you can still use Prettier for file types that ESLint does not handle well — CSS, HTML, XML,
+  SVG, and GraphQL — via the `formatters` option:
+
+  ```js
+  // eslint.config.js
+  import antfu from '@antfu/eslint-config'
+
+  export default antfu({
+    formatters: {
+      css: true,
+      html: true,
+    },
+  })
+  ```
+
+  Install the required package:
+
+  ```bash
+  npm i -D eslint-plugin-format
+  ```
+
+  See the [`formatters` option](/reference/config-options#other-options) for the full list of supported formats.
+</Accordion>
+
+<Accordion title="Will oxlint be integrated?">
+  There is a plan to integrate [oxlint](https://github.com/oxc-project/oxc) to speed up the linting process.
+  However there are still some blockers being worked through. You can track the progress in
+  [issue #767: **Oxlint Integration Plan**](https://github.com/antfu/eslint-config/issues/767).
+</Accordion>
+
+<Accordion title="Why not dprint?">
+  [dprint](https://dprint.dev/) uses the same model as Prettier — it reads the AST and reprints the code from
+  scratch, ignoring original line breaks and producing the same style of inconsistent diffs. For that reason
+  it is not preferred for JavaScript or TypeScript files.
+
+  However, dprint is supported for Markdown formatting via the `formatters` option:
+
+  ```js
+  export default antfu({
+    formatters: {
+      markdown: 'dprint',
+    },
+  })
+  ```
+</Accordion>
+
+<Accordion title="How do I format CSS?">
+  Enable the `formatters` option with `css: true`. This delegates formatting of `.css`, `.less`, `.scss`,
+  and `<style>` blocks in Vue files to Prettier via `eslint-plugin-format`.
+
+  ```js
+  // eslint.config.js
+  import antfu from '@antfu/eslint-config'
+
+  export default antfu({
+    formatters: {
+      css: true,
+    },
+  })
+  ```
+
+  Note that this only handles formatting, not linting. For CSS linting, consider [Stylelint](https://stylelint.io/).
+</Accordion>
+
+<Accordion title="Why does this config enforce function declarations at the top level?">
+  Anthony prefers top-level functions to always use `function` declarations rather than arrow functions
+  assigned to `const`. This is enforced by the `antfu/top-level-function` rule. Similarly, the
+  `antfu/if-newline` rule enforces a consistent newline style for `if` statements.
+
+  If these rules don't match your preferences, you can disable them with `lessOpinionated: true`:
+
+  ```ts
+  // eslint.config.js
+  import antfu from '@antfu/eslint-config'
+
+  export default antfu({
+    lessOpinionated: true,
+  })
+  ```
+</Accordion>
+
+<Accordion title="How do I use this config alongside other ESLint configs?">
+  The `antfu()` factory returns a `FlatConfigComposer` instance that supports `.prepend()` and `.append()`
+  for inserting other configs:
+
+  ```js
+  // eslint.config.js
+  import antfu from '@antfu/eslint-config'
+
+  export default antfu()
+    .prepend(
+      // configs to run before antfu's config
+    )
+    .append(
+      // configs to run after antfu's config
+    )
+  ```
+
+  For legacy eslintrc-style configs (from plugins that haven't migrated to flat config), use
+  `@eslint/eslintrc`'s `FlatCompat`:
+
+  ```js
+  // eslint.config.js
+  import antfu from '@antfu/eslint-config'
+  import { FlatCompat } from '@eslint/eslintrc'
+
+  const compat = new FlatCompat()
+
+  export default antfu(
+    { ignores: [] },
+    ...compat.config({
+      extends: ['eslint:recommended'],
+    }),
+  )
+  ```
+</Accordion>
+
+<Accordion title="I prefer double quotes / semicolons / 4-space indent...">
+  All stylistic preferences are configurable via the `stylistic` option:
+
+  ```js
+  // eslint.config.js
+  import antfu from '@antfu/eslint-config'
+
+  export default antfu({
+    stylistic: {
+      indent: 4,       // or 'tab'
+      quotes: 'double',
+      semi: true,
+    },
+  })
+  ```
+
+  For further rule-level overrides:
+
+  ```js
+  export default antfu({
+    stylistic: {
+      overrides: {
+        'style/operator-linebreak': ['error', 'before'],
+      },
+    },
+  })
+  ```
+
+  If the provided options still don't fit your project, you can always fork the config and maintain your own.
+</Accordion>
+
+<Accordion title="How do I see which rules are active in my project?">
+  Use the official `@eslint/config-inspector` tool. From your project root (where `eslint.config.js` lives),
+  run:
+
+  ```bash
+  npx @eslint/config-inspector
+  ```
+
+  This opens a visual UI in your browser showing every active rule, which files each rule applies to, and
+  where the rule originates in your config.
+</Accordion>
+
+</AccordionGroup>

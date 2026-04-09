@@ -1,0 +1,54 @@
+---
+title: 'Versioning policy'
+description: 'Understand how @antfu/eslint-config follows Semantic Versioning and what changes are considered breaking.'
+keywords: ['eslint', 'versioning', 'semver', 'breaking changes', 'changelog']
+---
+
+This project follows [Semantic Versioning](https://semver.org/) for releases. However, because this is an opinionated config with many moving parts, **rule changes are not treated as breaking changes**.
+
+<Warning>
+If you use this config directly, review the changes every time you update. Rule additions or option changes may affect your codebase even in minor or patch releases.
+</Warning>
+
+## What counts as a breaking change
+
+The following are considered breaking changes and will trigger a major version bump:
+
+- Node.js version requirement changes
+- Huge refactors that might break the config
+- Plugin major changes that might break the config
+- Changes that might affect most codebases
+
+## What does not count as a breaking change
+
+The following changes can happen in any release without a major version bump:
+
+- Enabling or disabling rules and plugins (even if they become stricter)
+- Rule option changes
+- Dependency version bumps
+
+This means a minor or patch release may introduce new lint errors in your project if rules are enabled or tightened.
+
+## Recommendations
+
+<Steps>
+  <Step title="Pin your version or use a lockfile">
+    Use a lockfile (`package-lock.json`, `pnpm-lock.yaml`, etc.) to ensure consistent rule behavior across environments. Avoid using `*` or `latest` as the version range.
+  </Step>
+  <Step title="Review the changelog on every update">
+    Before upgrading, check the [releases page](https://github.com/antfu/eslint-config/releases) for any rule changes that may affect your project.
+  </Step>
+  <Step title="Run lint after upgrading">
+    After upgrading, run `eslint --fix` to apply any auto-fixable rule changes, then review remaining violations manually.
+  </Step>
+</Steps>
+
+## Badge
+
+If you use this config in your project and want to reference it, you can add the code style badge to your README:
+
+```md
+[![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
+```
+
+[![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)

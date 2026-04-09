@@ -1,0 +1,135 @@
+---
+title: 'Getting started'
+description: 'Install @antfu/eslint-config and lint your project in minutes.'
+---
+
+## Recommended: CLI wizard
+
+The fastest way to set up `@antfu/eslint-config` is with the interactive CLI wizard. It handles installation, creates your config file, and can migrate an existing ESLint config to flat config.
+
+```bash
+pnpm dlx @antfu/eslint-config@latest
+```
+
+The wizard will prompt you to select your framework, configure options, and write the necessary files automatically.
+
+---
+
+## Manual setup
+
+If you prefer to configure everything yourself, follow the steps below.
+
+<Steps>
+  <Step title="Install the package">
+    Install ESLint and `@antfu/eslint-config` as dev dependencies.
+
+    <CodeGroup>
+
+    ```bash npm
+    npm install -D eslint @antfu/eslint-config
+    ```
+
+    ```bash yarn
+    yarn add -D eslint @antfu/eslint-config
+    ```
+
+    ```bash pnpm
+    pnpm add -D eslint @antfu/eslint-config
+    ```
+
+    ```bash bun
+    bun add -D eslint @antfu/eslint-config
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Create your config file">
+    Create `eslint.config.mjs` in your project root:
+
+    ```js eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu()
+    ```
+
+    That's all you need for a working config. TypeScript and Vue are detected automatically based on your installed packages.
+
+    <Note>
+      Use the `.mjs` extension to ensure the file is treated as an ES module regardless of your project's `"type"` field in `package.json`.
+    </Note>
+  </Step>
+
+  <Step title="Add lint scripts to package.json">
+    Add the following scripts to your `package.json`:
+
+    ```json package.json
+    {
+      "scripts": {
+        "lint": "eslint",
+        "lint:fix": "eslint --fix"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Run ESLint">
+    Check your project for lint errors:
+
+    ```bash
+    npm run lint
+    ```
+
+    Auto-fix all fixable issues:
+
+    ```bash
+    npm run lint:fix
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Migrating from legacy config
+
+If you have an existing `.eslintrc` or `eslint.config.js` using the legacy format, you can use [`@eslint/eslintrc`](https://www.npmjs.com/package/@eslint/eslintrc) to bridge the two formats while you migrate:
+
+```js eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+import { FlatCompat } from '@eslint/eslintrc'
+
+const compat = new FlatCompat()
+
+export default antfu(
+  {
+    ignores: [],
+  },
+
+  // Legacy config
+  ...compat.config({
+    extends: [
+      'eslint:recommended',
+      // other extends...
+    ],
+  })
+
+  // Additional flat configs...
+)
+```
+
+<Warning>
+  `.eslintignore` is not supported in flat config. Use the `ignores` option in your `eslint.config.mjs` instead.
+</Warning>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="IDE setup" icon="display" href="/ide-setup">
+    Configure auto-fix on save in VS Code, Zed, or Neovim.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration/basic">
+    Enable TypeScript, Vue, React, and other integrations.
+  </Card>
+</CardGroup>

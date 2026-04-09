@@ -1,0 +1,142 @@
+---
+title: 'Plugin renaming'
+description: 'How @antfu/eslint-config renames ESLint plugins and how to work with the new prefixes.'
+---
+
+ESLint's flat config requires plugins to be registered with explicit names rather than deriving the name from the npm package. `@antfu/eslint-config` takes advantage of this to give plugins shorter, more consistent prefixes.
+
+<Note>
+  Plugin renaming is an opinionated design choice. This config positions itself as the single top-level
+  config in a project, so renaming is safe and improves the day-to-day experience of writing rules and
+  disable comments.
+</Note>
+
+---
+
+## Renaming table
+
+| New prefix | Original prefix | Source plugin |
+| --- | --- | --- |
+| `import/*` | `import-lite/*` | [eslint-plugin-import-lite](https://github.com/9romise/eslint-plugin-import-lite) |
+| `node/*` | `n/*` | [eslint-plugin-n](https://github.com/eslint-community/eslint-plugin-n) |
+| `yaml/*` | `yml/*` | [eslint-plugin-yml](https://github.com/ota-meshi/eslint-plugin-yml) |
+| `ts/*` | `@typescript-eslint/*` | [@typescript-eslint/eslint-plugin](https://github.com/typescript-eslint/typescript-eslint) |
+| `style/*` | `@stylistic/*` | [@stylistic/eslint-plugin](https://github.com/eslint-stylistic/eslint-stylistic) |
+| `test/*` | `vitest/*` | [@vitest/eslint-plugin](https://github.com/vitest-dev/eslint-plugin-vitest) |
+| `test/*` | `no-only-tests/*` | [eslint-plugin-no-only-tests](https://github.com/levibuzolic/eslint-plugin-no-only-tests) |
+| `next/*` | `@next/next` | [@next/eslint-plugin-next](https://github.com/vercel/next.js/tree/canary/packages/eslint-plugin-next) |
+| `react/*` | `@eslint-react/*` | [@eslint-react/eslint-plugin](https://github.com/Rel1cx/eslint-react) |
+| `react-dom/*` | `@eslint-react/dom/*` | [@eslint-react/eslint-plugin](https://github.com/Rel1cx/eslint-react) |
+
+---
+
+## Using renamed prefixes
+
+When writing inline disable comments or rule overrides, use the new prefix instead of the original.
+
+```diff
+-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
++// eslint-disable-next-line ts/consistent-type-definitions
+type foo = { bar: 2 }
+```
+
+The same applies in rule overrides:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  typescript: {
+    overrides: {
+      // Use "ts/*" not "@typescript-eslint/*"
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+  stylistic: {
+    overrides: {
+      // Use "style/*" not "@stylistic/*"
+      'style/semi': ['error', 'never'],
+    },
+  },
+})
+```
+
+---
+
+## Auto-renaming for your custom configs (v2.9.0+)
+
+Since v2.9.0, `autoRenamePlugins` is enabled by default. This means any additional flat config objects you pass to `antfu()` will also have their plugin prefixes renamed automatically.
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  { typescript: true },
+  // Your custom overrides can use the short prefix directly
+  {
+    rules: {
+      'ts/no-explicit-any': 'warn', // works — auto-renamed
+    },
+  },
+)
+```
+
+To opt out of auto-renaming for your custom configs:
+
+```js
+export default antfu({
+  autoRenamePlugins: false,
+})
+```
+
+---
+
+## Named config renaming (v2.9.0+)
+
+In addition to plugin renaming, config names follow the pattern `antfu/<integration>/<purpose>`, for example:
+
+- `antfu/javascript/rules`
+- `antfu/typescript/rules`
+- `antfu/stylistic/rules`
+- `antfu/vue/rules`
+
+You can use these names with `FlatConfigComposer.override()` to surgically override a specific named config block:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .override('antfu/stylistic/rules', {
+    rules: {
+      'style/generator-star-spacing': ['error', { after: true, before: false }],
+    },
+  })
+```
+
+---
+
+## Reverting to original prefixes
+
+If you need to use the original plugin prefixes (for example, when combining with another config that
+expects the original names), you can revert the renaming with `.renamePlugins()`:
+
+```ts
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+  .renamePlugins({
+    ts: '@typescript-eslint',
+    yaml: 'yml',
+    node: 'n',
+    // ...
+  })
+```
+
+<Warning>
+  Reverting plugin renaming may cause conflicts if you mix this config with other configs that reference
+  the renamed prefixes. Only do this if you fully control all rule references in your project.
+</Warning>

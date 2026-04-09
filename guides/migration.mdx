@@ -1,0 +1,167 @@
+---
+title: 'Migration'
+description: 'Migrate from legacy ESLint config (.eslintrc) to the ESLint flat config format used by @antfu/eslint-config.'
+keywords: ['eslint', 'migration', 'flat config', 'eslintrc', 'FlatCompat']
+---
+
+ESLint v9 introduced [flat config](https://eslint.org/docs/latest/use/configure/configuration-files-new) as the new standard. This guide covers how to migrate from the legacy `.eslintrc` format.
+
+## Using the CLI wizard
+
+The fastest way to migrate is to run the starter wizard. It installs dependencies, creates `eslint.config.mjs`, and removes old config files automatically.
+
+```bash
+pnpm dlx @antfu/eslint-config@latest
+```
+
+<Steps>
+  <Step title="Run the CLI wizard">
+    Run the command above in your project root. The wizard detects your project type and asks a few questions to configure the setup.
+  </Step>
+  <Step title="Review the generated config">
+    The wizard creates `eslint.config.mjs` with the appropriate options based on your project. Review it and adjust as needed.
+  </Step>
+  <Step title="Remove legacy config files">
+    The wizard removes `.eslintrc`, `.eslintrc.js`, `.eslintrc.json`, `.eslintrc.yml`, and similar files. If you have any remaining, delete them manually.
+  </Step>
+  <Step title="Migrate .eslintignore">
+    `.eslintignore` is no longer supported in flat config. Move your ignore patterns to the `ignores` option in `eslint.config.mjs`:
+
+    ```js
+    // eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu({
+      ignores: [
+        '**/fixtures',
+        'dist/**',
+      ],
+    })
+    ```
+  </Step>
+  <Step title="Update inline disable comments">
+    Plugin prefixes have changed. Update any inline ESLint disable comments to use the new prefixes:
+
+    ```diff
+    -// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+    +// eslint-disable-next-line ts/consistent-type-definitions
+    type foo = { bar: 2 }
+    ```
+
+    See the [plugin prefix reference](/guides/customization#plugin-prefix-reference) for the full mapping.
+  </Step>
+</Steps>
+
+## Manual migration
+
+If you prefer to migrate without the CLI:
+
+<Steps>
+  <Step title="Install dependencies">
+    ```bash
+    pnpm i -D eslint @antfu/eslint-config
+    ```
+  </Step>
+  <Step title="Create eslint.config.mjs">
+    Create `eslint.config.mjs` in your project root:
+
+    ```js
+    // eslint.config.mjs
+    import antfu from '@antfu/eslint-config'
+
+    export default antfu()
+    ```
+  </Step>
+  <Step title="Remove legacy config files">
+    Delete `.eslintrc`, `.eslintrc.js`, `.eslintrc.json`, `.eslintrc.yaml`, `.eslintrc.yml`, and `.eslintignore`.
+  </Step>
+  <Step title="Update package.json scripts">
+    ```json
+    {
+      "scripts": {
+        "lint": "eslint",
+        "lint:fix": "eslint --fix"
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Using legacy configs with FlatCompat
+
+If you depend on third-party configs that haven't migrated to flat config yet, use [`@eslint/eslintrc`](https://www.npmjs.com/package/@eslint/eslintrc) to convert them:
+
+```bash
+npm i -D @eslint/eslintrc
+```
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+import { FlatCompat } from '@eslint/eslintrc'
+
+const compat = new FlatCompat()
+
+export default antfu(
+  {
+    ignores: [],
+  },
+
+  // Legacy config wrapped with FlatCompat
+  ...compat.config({
+    extends: [
+      'eslint:recommended',
+      // Other extends...
+    ],
+  }),
+
+  // Other flat configs...
+)
+```
+
+<Note>
+`.eslintignore` does not work in flat config. Use the `ignores` option in the first argument of `antfu()` instead.
+</Note>
+
+## Plugin prefix changes
+
+Flat config requires explicit plugin names. This config renames several plugins for consistency. If you have inline disable comments or rule overrides using the old prefixes, update them:
+
+| New prefix | Original prefix        |
+| ---------- | ---------------------- |
+| `import/*` | `import-lite/*`        |
+| `node/*`   | `n/*`                  |
+| `yaml/*`   | `yml/*`                |
+| `ts/*`     | `@typescript-eslint/*` |
+| `style/*`  | `@stylistic/*`         |
+| `test/*`   | `vitest/*`             |
+
+## autoRenamePlugins
+
+Since v2.9.0, the `autoRenamePlugins` option is enabled by default. This means the plugin renaming applies to your custom configs too — you can use the original prefix in your overrides and it will be renamed automatically:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  {},
+  {
+    rules: {
+      // You can use either prefix — autoRenamePlugins handles the mapping
+      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+)
+```
+
+To opt out of automatic renaming:
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu({
+  autoRenamePlugins: false,
+})
+```

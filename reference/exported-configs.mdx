@@ -1,0 +1,646 @@
+---
+title: 'Exported configs'
+description: 'Reference for all config factory functions exported from @antfu/eslint-config.'
+---
+
+Every config function exported from `@antfu/eslint-config` can be used individually to compose a custom configuration. This is an advanced pattern — for most projects the high-level [`antfu()`](#antfu) factory is sufficient.
+
+```js
+// eslint.config.js
+import {
+  combine,
+  comments,
+  ignores,
+  imports,
+  javascript,
+  jsonc,
+  markdown,
+  node,
+  stylistic,
+  typescript,
+  vue,
+  yaml,
+} from '@antfu/eslint-config'
+
+export default combine(
+  ignores(),
+  javascript(),
+  comments(),
+  node(),
+  imports(),
+  typescript(),
+  stylistic(),
+  vue(),
+  jsonc(),
+  yaml(),
+  markdown(),
+)
+```
+
+<Warning>
+  When composing configs manually, shared options (like `stylistic`) must be passed consistently across
+  each function that accepts them. The `antfu()` factory handles this for you automatically.
+</Warning>
+
+---
+
+## Main factory
+
+### antfu()
+
+```ts
+function antfu(
+  options?: OptionsConfig & Omit<TypedFlatConfigItem, 'files' | 'ignores'>,
+  ...userConfigs: Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[] | FlatConfigComposer | Linter.Config[]>[]
+): FlatConfigComposer<TypedFlatConfigItem, ConfigNames>
+```
+
+The primary entry point. Constructs the full ESLint flat config array based on the provided options and merges any additional user configs.
+
+Returns a [`FlatConfigComposer`](https://github.com/antfu/eslint-flat-config-utils#composer) instance, which supports chaining methods like `.prepend()`, `.append()`, `.override()`, and `.renamePlugins()`.
+
+```js
+// eslint.config.js
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  {
+    typescript: true,
+    vue: true,
+    stylistic: {
+      indent: 2,
+      quotes: 'single',
+    },
+  },
+  // Additional flat config items
+  {
+    files: ['**/*.ts'],
+    rules: {
+      'ts/consistent-type-definitions': ['error', 'interface'],
+    },
+  },
+)
+```
+
+See the [Config options reference](/reference/config-options) for a complete list of supported options.
+
+### combine()
+
+```ts
+function combine(
+  ...configs: Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[]>[]
+): Promise<TypedFlatConfigItem[]>
+```
+
+Merges multiple config arrays or config objects into a single flat array. Handles async configs (returns a `Promise`).
+
+```js
+import { combine, javascript, typescript } from '@antfu/eslint-config'
+
+export default combine(
+  javascript(),
+  typescript(),
+)
+```
+
+---
+
+## Base configs
+
+### javascript()
+
+```ts
+function javascript(
+  options?: OptionsIsInEditor & OptionsOverrides,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Core JavaScript rules. Always enabled by the `antfu()` factory (cannot be disabled). Sets up global language options (`ecmaVersion: 'latest'`, `sourceType: 'module'`) and enables rules from `eslint-plugin-unused-imports` and `eslint-plugin-antfu`.
+
+Key rules: `no-console`, `no-var`, `prefer-const`, `eqeqeq`, `no-eval`, `object-shorthand`, and many more.
+
+```js
+import { javascript } from '@antfu/eslint-config'
+
+const configs = await javascript({
+  isInEditor: false,
+  overrides: {
+    'no-console': 'off',
+  },
+})
+```
+
+### comments()
+
+```ts
+function comments(): Promise<TypedFlatConfigItem[]>
+```
+
+Rules for ESLint disable comments via `eslint-plugin-eslint-comments`. Prevents unused disable directives and other comment misuse.
+
+### command()
+
+```ts
+function command(): Promise<TypedFlatConfigItem[]>
+```
+
+Enables [`eslint-plugin-command`](https://github.com/antfu/eslint-plugin-command) — an on-demand micro-codemod tool triggered by special triple-slash comments.
+
+Example triggers:
+- `/// to-function` — convert arrow function to function declaration
+- `/// to-arrow` — convert function declaration to arrow function
+- `/// keep-sorted` — sort an object, array, or interface
+
+```ts
+/// to-function
+const foo = async (msg: string): void => {
+  console.log(msg)
+}
+// becomes:
+async function foo(msg: string): void {
+  console.log(msg)
+}
+```
+
+### ignores()
+
+```ts
+function ignores(
+  userIgnores?: string[] | ((originals: string[]) => string[]),
+  ignoreTypeScript?: boolean,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Produces a config that sets global ignores. Includes a built-in list of common ignored paths (build outputs, caches, lock files, etc.). Pass additional patterns to extend the list.
+
+```js
+import { ignores } from '@antfu/eslint-config'
+
+const configs = await ignores(['**/fixtures', '**/generated'])
+```
+
+### perfectionist()
+
+```ts
+function perfectionist(): Promise<TypedFlatConfigItem[]>
+```
+
+Registers `eslint-plugin-perfectionist` as an available plugin without enabling any rules by default. Rules from this plugin (e.g. `perfectionist/sort-imports`) can then be opted-in via overrides.
+
+---
+
+## Language configs
+
+### typescript()
+
+```ts
+function typescript(
+  options?: OptionsFiles
+    & OptionsComponentExts
+    & OptionsOverrides
+    & OptionsTypeScriptWithTypes
+    & OptionsTypeScriptParserOptions
+    & OptionsProjectType
+    & OptionsTypeScriptErasableOnly,
+): Promise<TypedFlatConfigItem[]>
+```
+
+TypeScript rules via `@typescript-eslint/eslint-plugin` (exposed as `ts/*` prefix). Enables standard rules and optionally type-aware rules when `tsconfigPath` is provided.
+
+```js
+import { typescript } from '@antfu/eslint-config'
+
+const configs = await typescript({
+  tsconfigPath: 'tsconfig.json',
+  overrides: {
+    'ts/no-explicit-any': 'warn',
+  },
+})
+```
+
+### vue()
+
+```ts
+function vue(
+  options?: OptionsVue & OptionsHasTypeScript & OptionsOverrides & OptionsStylistic,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Vue SFC rules via `eslint-plugin-vue` and optionally `eslint-processor-vue-blocks`. Supports Vue 2 and Vue 3 rule sets and optional accessibility rules.
+
+```js
+import { vue } from '@antfu/eslint-config'
+
+const configs = await vue({
+  vueVersion: 3,
+  typescript: true,
+})
+```
+
+### react()
+
+```ts
+function react(
+  options?: OptionsReact & OptionsOverrides & OptionsTypeScriptWithTypes & OptionsTypeScriptParserOptions,
+): Promise<TypedFlatConfigItem[]>
+```
+
+React rules via `@eslint-react/eslint-plugin` (exposed as `react/*`, `react-dom/*`) and `eslint-plugin-react-refresh`.
+
+```js
+import { react } from '@antfu/eslint-config'
+
+const configs = await react()
+```
+
+### node()
+
+```ts
+function node(): Promise<TypedFlatConfigItem[]>
+```
+
+Node.js environment rules via `eslint-plugin-n` (exposed as `node/*` prefix). Enforces best practices for Node.js-specific APIs.
+
+### jsx()
+
+```ts
+function jsx(
+  options?: OptionsJSX,
+): Promise<TypedFlatConfigItem[]>
+```
+
+JSX parsing support and optional accessibility rules via `eslint-plugin-jsx-a11y`.
+
+### svelte()
+
+```ts
+function svelte(
+  options?: OptionsHasTypeScript & OptionsOverrides & OptionsStylistic,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Svelte SFC rules via `eslint-plugin-svelte`. Requires `eslint-plugin-svelte` to be installed.
+
+### astro()
+
+```ts
+function astro(
+  options?: OptionsOverrides & OptionsStylistic,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Astro component rules via `eslint-plugin-astro`. Requires `eslint-plugin-astro` and `astro-eslint-parser`.
+
+### solid()
+
+```ts
+function solid(
+  options?: OptionsHasTypeScript & OptionsOverrides & OptionsTypeScriptWithTypes,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Solid.js rules via `eslint-plugin-solid`. Applied to `.jsx` and `.tsx` files. Requires `eslint-plugin-solid`.
+
+### angular()
+
+```ts
+function angular(
+  options?: OptionsOverrides,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Angular rules via `@angular-eslint/eslint-plugin` and `@angular-eslint/eslint-plugin-template`. Requires the `@angular-eslint` family of packages.
+
+### nextjs()
+
+```ts
+function nextjs(
+  options?: OptionsOverrides,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Next.js rules via `@next/eslint-plugin-next` (exposed as `next/*` prefix). Requires `@next/eslint-plugin-next`.
+
+### unocss()
+
+```ts
+function unocss(
+  options?: OptionsUnoCSS,
+): Promise<TypedFlatConfigItem[]>
+```
+
+UnoCSS rules via `@unocss/eslint-plugin`. Enables `unocss/order` and optionally `unocss/order-attributify` (when `attributify: true`) and `unocss/blocklist` (when `strict: true`). Requires `@unocss/eslint-plugin`.
+
+### e18e()
+
+```ts
+function e18e(
+  options?: OptionsE18e,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Ecosystem performance rules via `@e18e/eslint-plugin`. Includes modernization, module replacement, and performance improvement rules. Enabled by default.
+
+### pnpm()
+
+```ts
+function pnpm(
+  options?: OptionsPnpm,
+): Promise<TypedFlatConfigItem[]>
+```
+
+pnpm workspace and catalog linting rules. Enforces catalog usage in `package.json` and validates `pnpm-workspace.yaml`. Auto-detected when `pnpm-workspace.yaml` is present.
+
+---
+
+## Style and quality configs
+
+### stylistic()
+
+```ts
+function stylistic(
+  options?: StylisticOptions,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Code style and formatting rules via `@stylistic/eslint-plugin` (exposed as `style/*` prefix). Defaults: 2-space indent, single quotes, no semicolons.
+
+```js
+import { stylistic } from '@antfu/eslint-config'
+
+const configs = await stylistic({
+  indent: 4,
+  quotes: 'double',
+  semi: true,
+})
+```
+
+### imports()
+
+```ts
+function imports(
+  options?: OptionsStylistic & OptionsOverrides,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Import order and hygiene rules via `eslint-plugin-import-lite` (exposed as `import/*` prefix) and `eslint-plugin-unused-imports`.
+
+### unicorn()
+
+```ts
+function unicorn(
+  options?: OptionsUnicorn,
+): Promise<TypedFlatConfigItem[]>
+```
+
+A curated subset of `eslint-plugin-unicorn` rules. Set `allRecommended: true` to include the full recommended set.
+
+### regexp()
+
+```ts
+function regexp(
+  options?: OptionsRegExp & OptionsOverrides,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Regular expression linting rules via `eslint-plugin-regexp`. Helps catch problematic patterns and suggest more performant alternatives.
+
+### jsdoc()
+
+```ts
+function jsdoc(
+  options?: OptionsStylistic,
+): Promise<TypedFlatConfigItem[]>
+```
+
+JSDoc comment linting via `eslint-plugin-jsdoc`. Validates that JSDoc comments are complete and consistent.
+
+### test()
+
+```ts
+function test(
+  options?: OptionsIsInEditor & OptionsOverrides,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Test file rules via `@vitest/eslint-plugin` and `eslint-plugin-no-only-tests` (both exposed under `test/*` prefix). Prevents committed `.only` calls and other test-specific issues.
+
+---
+
+## File format configs
+
+### formatters()
+
+```ts
+function formatters(
+  options?: OptionsFormatters | true,
+  stylistic?: StylisticConfig,
+): Promise<TypedFlatConfigItem[]>
+```
+
+External formatter integration via `eslint-plugin-format`. Supports Prettier (CSS, HTML, XML, SVG, Markdown, GraphQL, Astro) and dprint (Markdown). When `options` is `true`, all available formatters are enabled automatically.
+
+```js
+import { formatters } from '@antfu/eslint-config'
+
+const configs = await formatters({
+  css: true,
+  html: true,
+  markdown: 'prettier',
+})
+```
+
+### jsonc()
+
+```ts
+function jsonc(
+  options?: OptionsStylistic & OptionsOverrides & OptionsFiles,
+): Promise<TypedFlatConfigItem[]>
+```
+
+JSONC and JSON5 rules via `eslint-plugin-jsonc`. Applies to `.json`, `.jsonc`, and `.json5` files.
+
+### yaml()
+
+```ts
+function yaml(
+  options?: OptionsStylistic & OptionsOverrides & OptionsFiles,
+): Promise<TypedFlatConfigItem[]>
+```
+
+YAML rules via `eslint-plugin-yml` (exposed as `yaml/*` prefix). Applies to `.yml` and `.yaml` files.
+
+### toml()
+
+```ts
+function toml(
+  options?: OptionsStylistic & OptionsOverrides & OptionsFiles,
+): Promise<TypedFlatConfigItem[]>
+```
+
+TOML rules via `eslint-plugin-toml`. Applies to `.toml` files.
+
+### markdown()
+
+```ts
+function markdown(
+  options?: OptionsMarkdown & OptionsComponentExts,
+): Promise<TypedFlatConfigItem[]>
+```
+
+Linting for code blocks embedded in Markdown files via `eslint-plugin-markdown`. Each fenced code block is linted according to its language tag. Also supports GFM (GitHub Flavored Markdown).
+
+---
+
+## Sort configs
+
+### sortPackageJson()
+
+```ts
+function sortPackageJson(): TypedFlatConfigItem[]
+```
+
+Enforces a consistent key ordering in `package.json` files using `eslint-plugin-jsonc` sort rules.
+
+### sortTsconfig()
+
+```ts
+function sortTsconfig(): TypedFlatConfigItem[]
+```
+
+Enforces a consistent key ordering in `tsconfig.json` files using `eslint-plugin-jsonc` sort rules.
+
+---
+
+## Utility functions
+
+### renameRules()
+
+```ts
+function renameRules(
+  rules: Record<string, any>,
+  map: Record<string, string>,
+): Record<string, any>
+```
+
+Renames plugin prefixes in a rules object according to the provided mapping. Useful for adapting rule sets from third-party configs to use the renamed prefixes.
+
+```ts
+import { renameRules } from '@antfu/eslint-config'
+
+export default [{
+  rules: renameRules(
+    {
+      '@typescript-eslint/indent': 'error'
+    },
+    { '@typescript-eslint': 'ts' }
+  )
+}]
+```
+
+### renamePluginInConfigs()
+
+```ts
+function renamePluginInConfigs(
+  configs: TypedFlatConfigItem[],
+  map: Record<string, string>,
+): TypedFlatConfigItem[]
+```
+
+Renames both plugin registrations and rule references in an array of flat config objects. Useful for adapting entire config arrays to use consistent plugin prefixes.
+
+```ts
+import { renamePluginInConfigs } from '@antfu/eslint-config'
+import someConfigs from './some-configs'
+
+export default renamePluginInConfigs(someConfigs, {
+  '@typescript-eslint': 'ts',
+  '@stylistic': 'style',
+})
+```
+
+---
+
+## Config presets
+
+### CONFIG_PRESET_FULL_ON
+
+```ts
+const CONFIG_PRESET_FULL_ON: OptionsConfig
+```
+
+A preset `OptionsConfig` object with every integration enabled. Useful as a reference or for testing. Includes TypeScript (with `tsconfigPath`, `erasableOnly`), Vue (with `a11y`), React, Next.js, Svelte, Astro, Solid, Angular, UnoCSS, formatters, pnpm, and all other options set to `true`.
+
+### CONFIG_PRESET_FULL_OFF
+
+```ts
+const CONFIG_PRESET_FULL_OFF: OptionsConfig
+```
+
+A preset `OptionsConfig` object with every integration disabled. Useful as a base for building a minimal custom config.
+
+### defaultPluginRenaming
+
+```ts
+const defaultPluginRenaming: Record<string, string>
+```
+
+The default plugin rename mapping applied by `antfu()`. You can reference this to understand the active renames or extend it.
+
+```ts
+import { defaultPluginRenaming } from '@antfu/eslint-config'
+
+// {
+//   '@eslint-react': 'react',
+//   '@next/next': 'next',
+//   '@stylistic': 'style',
+//   '@typescript-eslint': 'ts',
+//   'import-lite': 'import',
+//   'n': 'node',
+//   'vitest': 'test',
+//   'yml': 'yaml',
+// }
+console.log(defaultPluginRenaming)
+```
+
+---
+
+## Glob constants
+
+`@antfu/eslint-config` exports a set of glob pattern constants you can use when composing custom configs to target specific file types:
+
+| Constant | Pattern | Files |
+| -------- | ------- | ----- |
+| `GLOB_SRC` | `**/*.?([cm])[jt]s?(x)` | All JS/TS source files |
+| `GLOB_JS` | `**/*.?([cm])js` | JavaScript files |
+| `GLOB_JSX` | `**/*.?([cm])jsx` | JSX files |
+| `GLOB_TS` | `**/*.?([cm])ts` | TypeScript files |
+| `GLOB_TSX` | `**/*.?([cm])tsx` | TSX files |
+| `GLOB_VUE` | `**/*.vue` | Vue SFC files |
+| `GLOB_SVELTE` | `**/*.svelte?(.{js,ts})` | Svelte files |
+| `GLOB_ASTRO` | `**/*.astro` | Astro files |
+| `GLOB_MARKDOWN` | `**/*.md` | Markdown files |
+| `GLOB_JSON` | `**/*.json` | JSON files |
+| `GLOB_JSONC` | `**/*.jsonc` | JSONC files |
+| `GLOB_YAML` | `**/*.y?(a)ml` | YAML files |
+| `GLOB_TOML` | `**/*.toml` | TOML files |
+| `GLOB_CSS` | `**/*.css` | CSS files |
+| `GLOB_SCSS` | `**/*.scss` | SCSS files |
+| `GLOB_LESS` | `**/*.less` | Less files |
+| `GLOB_XML` | `**/*.xml` | XML files |
+| `GLOB_SVG` | `**/*.svg` | SVG files |
+| `GLOB_HTML` | `**/*.htm?(l)` | HTML files |
+| `GLOB_GRAPHQL` | `**/*.{g,graph}ql` | GraphQL files |
+| `GLOB_TESTS` | (array) | Test files (`*.spec.*`, `*.test.*`, etc.) |
+| `GLOB_EXCLUDE` | (array) | Default ignored paths (node_modules, dist, etc.) |
+
+```ts
+import { GLOB_TS, GLOB_TESTS } from '@antfu/eslint-config'
+
+export default antfu(
+  {},
+  {
+    files: GLOB_TESTS,
+    rules: { 'no-console': 'off' },
+  },
+)
